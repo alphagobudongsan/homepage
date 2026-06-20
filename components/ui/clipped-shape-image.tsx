@@ -7,6 +7,7 @@ interface MediaItem {
   type: "image" | "video";
   alt: string;
   clipId: "clip-another1" | "clip-another2" | "clip-another3";
+  href?: string; // 있으면 클릭 시 해당 위치로 이동
 }
 
 interface ClippedShapeGalleryProps extends React.ComponentPropsWithoutRef<"section"> {
@@ -68,9 +69,9 @@ const ClippedShapeGallery = React.forwardRef<HTMLElement, ClippedShapeGalleryPro
           className={`grid grid-cols-3 gap-6 ${className || ""}`}
           {...props}
         >
-          {itemsToRender.map((item, index) => (
-            <figure key={index} className="m-0" style={{ clipPath: `url(#${item.clipId})` }}>
-              {item.type === "image" ? (
+          {itemsToRender.map((item, index) => {
+            const media =
+              item.type === "image" ? (
                 <img
                   src={item.src}
                   alt={item.alt}
@@ -86,9 +87,19 @@ const ClippedShapeGallery = React.forwardRef<HTMLElement, ClippedShapeGalleryPro
                 >
                   <source src={item.src} type="video/mp4" />
                 </video>
-              )}
-            </figure>
-          ))}
+              );
+            return (
+              <figure key={index} className="m-0" style={{ clipPath: `url(#${item.clipId})` }}>
+                {item.href ? (
+                  <a href={item.href} aria-label={item.alt} className="block cursor-pointer">
+                    {media}
+                  </a>
+                ) : (
+                  media
+                )}
+              </figure>
+            );
+          })}
         </section>
       </>
     );

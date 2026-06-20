@@ -17,7 +17,7 @@ const agents = [
     specialty: ["아파트 매매", "전세·월세", "입지 분석"],
     deals: 300,
     reviews: 184,
-    address: "경기도 양주시 옥정동 옥정로 123",
+    address: "경기도 양주시 옥정로5길 35, 상가101호",
     phone: "031-864-4222",
     mobile: "010-4699-4222",
     hours: "평일 09:00 ~ 19:00 / 주말 10:00 ~ 17:00",
@@ -38,7 +38,7 @@ const agents = [
     specialty: ["상가·공장·창고", "아파트 매매", "권리 분석"],
     deals: 0,
     reviews: 0,
-    address: "경기도 양주시 옥정동 옥정로 123",
+    address: "경기도 양주시 옥정로5길 35, 상가101호",
     phone: "031-864-4222",
     mobile: "",
     hours: "평일 09:00 ~ 19:00 / 주말 10:00 ~ 17:00",
@@ -79,9 +79,10 @@ export default function AgentsPage() {
             mediaItems={[
               {
                 src: "/agent-kang.jpg",
-                alt: "강은주 공인중개사",
+                alt: "강은주 공인중개사 — 소개 보기",
                 clipId: "clip-another1",
                 type: "image",
+                href: "#kang-eunju",
               },
               {
                 src: "/sindosi.png",
@@ -91,9 +92,10 @@ export default function AgentsPage() {
               },
               {
                 src: "/agent-kwon.png",
-                alt: "권정욱 공인중개사",
+                alt: "권정욱 공인중개사 — 소개 보기",
                 clipId: "clip-another3",
                 type: "image",
+                href: "#kwon-jeonguk",
               },
             ]}
           />
@@ -108,7 +110,11 @@ export default function AgentsPage() {
       {/* Agent Profiles */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-14 space-y-10">
         {agents.map((agent) => (
-          <div key={agent.id} className="bg-white border border-border rounded-sm overflow-hidden">
+          <div
+            key={agent.id}
+            id={agent.id}
+            className="bg-white border border-border rounded-sm overflow-hidden scroll-mt-24"
+          >
             <div className="grid grid-cols-1 md:grid-cols-[280px_1fr]">
               {/* Photo */}
               <div className="relative">
