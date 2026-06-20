@@ -157,6 +157,33 @@ export async function fetchAptRent(
   return data.length > 0 ? data : getMockRentData();
 }
 
+// 실거래 데이터가 있는 가장 최근 월을 역추적해서 반환 (최대 maxBack개월).
+// 국토부 신고 지연으로 당월이 비어도 직전 달들을 자동 탐색.
+// 모든 월이 비거나 API 미연동(키 없음)일 때만 목업으로 폴백.
+export async function fetchLatestAptTrade(
+  lawdCd: string,
+  maxBack = 6
+): Promise<{ items: TradeItem[]; ymd: string; isMock: boolean }> {
+  for (let i = 0; i < maxBack; i++) {
+    const ymd = getYearMonth(i);
+    const data = await fetchAptTradeRaw(lawdCd, ymd);
+    if (data.length > 0) return { items: data, ymd, isMock: false };
+  }
+  return { items: getMockTradeData(), ymd: getYearMonth(1), isMock: true };
+}
+
+export async function fetchLatestAptRent(
+  lawdCd: string,
+  maxBack = 6
+): Promise<{ items: RentItem[]; ymd: string; isMock: boolean }> {
+  for (let i = 0; i < maxBack; i++) {
+    const ymd = getYearMonth(i);
+    const data = await fetchAptRentRaw(lawdCd, ymd);
+    if (data.length > 0) return { items: data, ymd, isMock: false };
+  }
+  return { items: getMockRentData(), ymd: getYearMonth(1), isMock: true };
+}
+
 // 최근 N개월 매매 실거래 (옥정동 전체, 단지 목록/상세용)
 export async function fetchAptTradeRange(
   lawdCd: string,

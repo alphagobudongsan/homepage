@@ -1,4 +1,4 @@
-import { fetchAptTrade, fetchAptRent, formatAmount, getYearMonth } from "@/lib/molit";
+import { fetchLatestAptTrade, fetchLatestAptRent } from "@/lib/molit";
 import MarketClient from "./MarketClient";
 
 export const metadata = {
@@ -9,27 +9,18 @@ export const metadata = {
 export const revalidate = 0;
 
 export default async function MarketPage() {
-  // 당월 데이터 우선, 없으면 전월로 폴백
-  const thisYmd = getYearMonth(0);
-  const prevYmd = getYearMonth(1);
-
-  const [thisTrades, prevTrades, thisRents, prevRents] = await Promise.all([
-    fetchAptTrade("41630", thisYmd),
-    fetchAptTrade("41630", prevYmd),
-    fetchAptRent("41630", thisYmd),
-    fetchAptRent("41630", prevYmd),
+  // 실거래가 있는 가장 최근 월을 자동 탐색 (당월이 비면 직전 달들로 역추적)
+  const [tradeRes, rentRes] = await Promise.all([
+    fetchLatestAptTrade("41630"),
+    fetchLatestAptRent("41630"),
   ]);
-
-  const currentTrades = thisTrades.length > 0 ? thisTrades : prevTrades;
-  const rentData = thisRents.length > 0 ? thisRents : prevRents;
-  const currentYmd = thisTrades.length > 0 ? thisYmd : prevYmd;
 
   return (
     <MarketClient
-      currentTrades={currentTrades}
-      prevTrades={prevTrades}
-      rentData={rentData}
-      currentYmd={currentYmd}
+      currentTrades={tradeRes.items}
+      prevTrades={[]}
+      rentData={rentRes.items}
+      currentYmd={tradeRes.ymd}
     />
   );
 }

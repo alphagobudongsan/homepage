@@ -18,10 +18,9 @@ import {
   HeartHandshake,
 } from "lucide-react";
 import {
-  fetchAptTrade,
-  fetchAptRent,
+  fetchLatestAptTrade,
+  fetchLatestAptRent,
   formatAmount,
-  getYearMonth,
   TradeItem,
   RentItem,
 } from "@/lib/molit";
@@ -174,15 +173,13 @@ const cases = [
 ];
 
 export default async function HomePage() {
-  // 당월 데이터 우선, 없으면 전월로 폴백 (실시간 조회)
-  const [thisTrades, prevTrades, thisRents, prevRents] = await Promise.all([
-    fetchAptTrade("41630", getYearMonth(0)),
-    fetchAptTrade("41630", getYearMonth(1)),
-    fetchAptRent("41630", getYearMonth(0)),
-    fetchAptRent("41630", getYearMonth(1)),
+  // 실거래가 있는 가장 최근 월을 자동 탐색 (당월이 비면 직전 달들로 역추적)
+  const [tradeRes, rentRes] = await Promise.all([
+    fetchLatestAptTrade("41630"),
+    fetchLatestAptRent("41630"),
   ]);
-  const trades = thisTrades.length > 0 ? thisTrades : prevTrades;
-  const rents = thisRents.length > 0 ? thisRents : prevRents;
+  const trades = tradeRes.items;
+  const rents = rentRes.items;
   const marketHighlights = buildHighlights(trades, rents);
 
   // 홈페이지 실시간 접속 년월일 (한국 시간 기준)
@@ -198,6 +195,18 @@ export default async function HomePage() {
     <>
       {/* ===== HERO ===== */}
       <section className="relative bg-navy overflow-hidden pt-16">
+        {/* 모바일 전용 배경 영상 */}
+        <video
+          src="/hero-video.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="lg:hidden absolute inset-0 w-full h-full object-contain object-center"
+        />
+        {/* 모바일 영상 위 오버레이 (가독성) */}
+        <div className="lg:hidden absolute inset-0 bg-gradient-to-b from-navy/60 via-navy/40 to-navy/65" />
+
         {/* Oversized background type */}
         <div className="absolute inset-0 flex flex-col justify-center pointer-events-none select-none overflow-hidden">
           <span className="font-display text-white/[0.06] text-[22vw] leading-[0.8] whitespace-nowrap -ml-4">
