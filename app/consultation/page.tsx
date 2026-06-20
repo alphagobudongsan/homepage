@@ -56,10 +56,16 @@ export default function ConsultationPage() {
                 양식 작성이 번거로우시면 바로 전화주세요.
               </p>
               <a
-                href="tel:031-000-0000"
+                href="tel:031-864-4222"
                 className="flex items-center justify-center gap-2 w-full py-3 bg-gold text-navy font-bold rounded-sm hover:bg-gold-light transition-colors duration-200 cursor-pointer text-sm"
               >
-                031-000-0000
+                031-864-4222
+              </a>
+              <a
+                href="tel:010-4699-4222"
+                className="flex items-center justify-center gap-2 w-full py-3 mt-2 border border-gold text-gold font-bold rounded-sm hover:bg-gold hover:text-navy transition-colors duration-200 cursor-pointer text-sm"
+              >
+                010-4699-4222
               </a>
               <p className="text-white/40 text-xs text-center mt-3">
                 평일 09:00 ~ 19:00 | 토요일 10:00 ~ 17:00

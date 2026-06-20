@@ -29,9 +29,14 @@ export default function Footer() {
                 </span>
               </div>
             </div>
-            <p className="text-sm text-white/60 leading-relaxed max-w-xs">
-              경기도 양주시 옥정동 전문 공인중개사 2인이 AI 실거래 데이터로
-              매수·임차 고객에게 가장 정확한 정보를 안내합니다.
+            <p className="text-sm text-white/60 leading-relaxed">
+              옥정신도시 수석공인중개사 2인의 교차 검증 시스템
+              <br />
+              권리 분석부터 현장 확인까지, 옥정신도시를 가장 잘 아는
+              <br />
+              2인의 수석공인중개사가 교차 검증하여
+              <br />
+              안전을 책임집니다.
             </p>
           </div>
 
@@ -63,18 +68,35 @@ export default function Footer() {
               <li className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-gold mt-0.5 flex-shrink-0" />
                 <span className="text-sm text-white/60">
-                  경기도 양주시 옥정동 일대
+                  경기도 양주시 옥정로5길 35, 상가101호
                 </span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-gold flex-shrink-0" />
-                <span className="text-sm text-white/60">031-000-0000</span>
+                <a
+                  href="tel:031-864-4222"
+                  className="text-sm text-white/60 hover:text-gold transition-colors duration-200 cursor-pointer"
+                >
+                  031-864-4222
+                </a>
+              </li>
+              <li className="flex items-center gap-2.5">
+                <Phone className="w-4 h-4 text-gold flex-shrink-0" />
+                <a
+                  href="tel:010-4699-4222"
+                  className="text-sm text-white/60 hover:text-gold transition-colors duration-200 cursor-pointer"
+                >
+                  010-4699-4222
+                </a>
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 text-gold flex-shrink-0" />
-                <span className="text-sm text-white/60">
-                  info@okjeong-re.kr
-                </span>
+                <a
+                  href="mailto:ipt_korea@naver.com"
+                  className="text-sm text-white/60 hover:text-gold transition-colors duration-200 cursor-pointer"
+                >
+                  ipt_korea@naver.com
+                </a>
               </li>
             </ul>
           </div>
