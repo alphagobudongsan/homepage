@@ -621,14 +621,22 @@ export default async function HomePage() {
               </div>
             </div>
 
-            <div className="border-2 border-navy overflow-hidden">
-              <iframe
-                title="알파고 공인중개사사무소 위치 (경기도 양주시 옥정로5길 35)"
-                src="https://maps.google.com/maps?q=%EA%B2%BD%EA%B8%B0%EB%8F%84%20%EC%96%91%EC%A3%BC%EC%8B%9C%20%EC%98%A5%EC%A0%95%EB%A1%9C5%EA%B8%B8%2035&t=&z=16&ie=UTF8&iwloc=&output=embed"
-                className="w-full h-[420px] grayscale"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
+            <div>
+              <div className="flex items-baseline gap-2 mb-3">
+                <h3 className="text-lg font-black text-navy">오시는 길</h3>
+                <span className="text-sm font-semibold text-gold">
+                  &lsquo;옥정중학교&rsquo; 검색하고 오시면 편하세요
+                </span>
+              </div>
+              <div className="border-2 border-navy overflow-hidden">
+                <iframe
+                  title="알파고 공인중개사사무소 위치 (경기도 양주시 옥정로5길 35)"
+                  src="https://maps.google.com/maps?q=%EA%B2%BD%EA%B8%B0%EB%8F%84%20%EC%96%91%EC%A3%BC%EC%8B%9C%20%EC%98%A5%EC%A0%95%EB%A1%9C5%EA%B8%B8%2035&t=&z=16&ie=UTF8&iwloc=&output=embed"
+                  className="w-full h-[420px] grayscale"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </div>
             </div>
           </div>
         </div>
