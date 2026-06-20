@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Phone, ArrowUp } from "lucide-react";
+import Link from "next/link";
+import { Phone, ArrowUp, BarChart3 } from "lucide-react";
 
 // 공식 브랜드 로고 (Simple Icons)
 function KakaoIcon({ className = "" }: { className?: string }) {
@@ -85,6 +86,16 @@ export default function FloatingActions() {
           <ArrowUp className="w-5 h-5" />
         </button>
       )}
+
+      {/* 모바일 전용: 옥정동 아파트 실거래가 확인 (가시성 강조) */}
+      <Link
+        href="/market"
+        aria-label="옥정동 아파트 실거래가 확인"
+        className="lg:hidden flex items-center gap-2 h-12 pl-3.5 pr-4 rounded-full shadow-lg bg-blue-600 text-white font-bold text-[13px] transition-transform duration-200 hover:scale-105 cursor-pointer"
+      >
+        <BarChart3 className="w-5 h-5 flex-shrink-0" />
+        <span className="whitespace-nowrap">실거래가 확인</span>
+      </Link>
 
       {ACTIONS.map((a) => (
         <a
