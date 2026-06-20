@@ -1,3 +1,4 @@
+import { MessageCircle } from "lucide-react";
 import ConsultationForm from "./ConsultationForm";
 
 export const metadata = {
@@ -66,6 +67,15 @@ export default function ConsultationPage() {
                 className="flex items-center justify-center gap-2 w-full py-3 mt-2 border border-gold text-gold font-bold rounded-sm hover:bg-gold hover:text-navy transition-colors duration-200 cursor-pointer text-sm"
               >
                 010-4699-4222
+              </a>
+              <a
+                href="https://pf.kakao.com/_xhtexnG"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-3 mt-2 bg-[#FEE500] text-[#191919] font-bold rounded-sm hover:brightness-95 transition-all duration-200 cursor-pointer text-sm"
+              >
+                <MessageCircle className="w-4 h-4 fill-[#191919]" />
+                카카오톡 상담
               </a>
               <p className="text-white/40 text-xs text-center mt-3">
                 평일 09:00 ~ 19:00 | 토요일 10:00 ~ 17:00

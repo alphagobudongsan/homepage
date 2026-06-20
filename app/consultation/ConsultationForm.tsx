@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle, Send } from "lucide-react";
+import { CheckCircle, Send, MessageCircle } from "lucide-react";
 
 const COMPLEXES = [
   "e편한세상 옥정어반센트럴",
@@ -28,6 +28,12 @@ const BUDGETS = [
 
 const SIZES = ["59㎡ 이하", "60~74㎡", "75~84㎡", "85~110㎡", "110㎡ 이상", "무관"];
 
+// Web3Forms Access Key (이메일 수신용, 공개 키라 노출 무방)
+const WEB3FORMS_KEY = "fb6d2fef-5b06-49bf-abf3-cb2c8db0cfd9";
+
+// 카카오톡 채널 (카톡 상담 버튼)
+export const KAKAO_CHANNEL_URL = "https://pf.kakao.com/_xhtexnG";
+
 type PurposeType = "매매" | "전세" | "월세" | "기타";
 type ModeType = "seek" | "list"; // seek: 집을 구해요(매수·임차), list: 집을 내놓아요(매도·임대)
 
@@ -47,6 +53,7 @@ export default function ConsultationForm() {
   });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -64,10 +71,48 @@ export default function ConsultationForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // 실제 구현 시 API 호출로 대체
-    await new Promise((r) => setTimeout(r, 1200));
-    setLoading(false);
-    setSubmitted(true);
+    setError("");
+    try {
+      const payload = {
+        access_key: WEB3FORMS_KEY,
+        subject: `[알파고 상담신청] ${
+          mode === "seek" ? "구해요" : "내놓아요"
+        } · ${purpose} · ${form.name}`,
+        from_name: "알파고 홈페이지 상담신청",
+        상담구분: mode === "seek" ? "집을 구해요(매수·임차)" : "집을 내놓아요(매도·임대)",
+        거래유형: purpose,
+        이름: form.name,
+        연락처: form.phone,
+        단지: form.complex || "미정",
+        ...(mode === "seek"
+          ? { 예산: form.budget || "미정", "희망 면적": form.size || "미정" }
+          : { "희망 가격": form.price || "미정", "보유 면적": form.size || "미정" }),
+        시기: form.moveDate || "미정",
+        문의사항: form.message || "(없음)",
+      };
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSubmitted(true);
+      } else {
+        setError(
+          "전송에 실패했어요. 잠시 후 다시 시도하시거나 전화(031-864-4222)로 문의해 주세요."
+        );
+      }
+    } catch {
+      setError(
+        "전송 중 오류가 발생했어요. 전화(031-864-4222)로 문의해 주세요."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (submitted) {
@@ -390,6 +435,11 @@ export default function ConsultationForm() {
       </div>
 
       <div className="px-6 pb-6">
+        {error && (
+          <p className="mb-3 text-sm text-gold-dark bg-gold/10 border border-gold/30 rounded-sm px-3 py-2">
+            {error}
+          </p>
+        )}
         <button
           type="submit"
           disabled={loading}
@@ -402,6 +452,22 @@ export default function ConsultationForm() {
           )}
           {loading ? "신청 중..." : "무료 상담 신청하기"}
         </button>
+
+        <div className="flex items-center gap-3 my-4">
+          <span className="flex-1 h-px bg-border" />
+          <span className="text-xs text-text-light">또는</span>
+          <span className="flex-1 h-px bg-border" />
+        </div>
+
+        <a
+          href={KAKAO_CHANNEL_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#FEE500] text-[#191919] font-bold rounded-sm hover:brightness-95 transition-all duration-200 cursor-pointer text-sm"
+        >
+          <MessageCircle className="w-4 h-4 fill-[#191919]" />
+          카카오톡으로 바로 상담하기
+        </a>
       </div>
     </form>
   );
