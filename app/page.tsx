@@ -617,14 +617,14 @@ export default async function HomePage() {
               </div>
               <div className="flex items-center gap-2 text-sm text-navy font-bold">
                 <MapPin className="w-4 h-4 text-gold" />
-                경기도 양주시 옥정동 · 알파고 공인중개사사무소
+                경기도 양주시 옥정로5길 35, 상가101호 · 알파고 공인중개사사무소
               </div>
             </div>
 
             <div className="border-2 border-navy overflow-hidden">
               <iframe
-                title="옥정동 지도"
-                src="https://maps.google.com/maps?q=%EA%B2%BD%EA%B8%B0%EB%8F%84%20%EC%96%91%EC%A3%BC%EC%8B%9C%20%EC%98%A5%EC%A0%95%EB%8F%99&t=&z=14&ie=UTF8&iwloc=&output=embed"
+                title="알파고 공인중개사사무소 위치 (경기도 양주시 옥정로5길 35)"
+                src="https://maps.google.com/maps?q=%EA%B2%BD%EA%B8%B0%EB%8F%84%20%EC%96%91%EC%A3%BC%EC%8B%9C%20%EC%98%A5%EC%A0%95%EB%A1%9C5%EA%B8%B8%2035&t=&z=16&ie=UTF8&iwloc=&output=embed"
                 className="w-full h-[420px] grayscale"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
