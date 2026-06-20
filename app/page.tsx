@@ -207,13 +207,13 @@ export default async function HomePage() {
         {/* 모바일 영상 위 오버레이 (가독성) */}
         <div className="lg:hidden absolute inset-0 bg-gradient-to-b from-navy/60 via-navy/40 to-navy/65" />
 
-        {/* Oversized background type */}
+        {/* Oversized background type — 사무소 슬로건 핵심 '고객을 먼저' (좌측 영역에 노출) */}
         <div className="absolute inset-0 flex flex-col justify-center pointer-events-none select-none overflow-hidden">
-          <span className="font-display text-white/[0.06] text-[22vw] leading-[0.8] whitespace-nowrap -ml-4">
-            OKJEONG
+          <span className="font-display-kr text-white/[0.06] text-[16vw] lg:text-[13vw] leading-[0.85] whitespace-nowrap -ml-2">
+            고객을
           </span>
-          <span className="font-display text-gold/[0.10] text-[22vw] leading-[0.8] whitespace-nowrap text-right -mr-4">
-            VALUE
+          <span className="font-display-kr text-gold/[0.12] text-[16vw] lg:text-[13vw] leading-[0.85] whitespace-nowrap -ml-2">
+            먼저
           </span>
         </div>
 
@@ -251,11 +251,20 @@ export default async function HomePage() {
               <span className="text-gold">&lsquo;완벽하게&rsquo;</span> 찾아내다.
             </h1>
 
-            <p className="text-white/70 text-base sm:text-lg leading-relaxed mb-9 max-w-xl">
+            <p className="text-white/70 text-base sm:text-lg leading-relaxed mb-6 max-w-xl">
               &ldquo;옥정동 아파트 전문 부동산 추천&rdquo;에 대한 가장 정확한 해답.
               <br className="hidden sm:block" />
               실거래가 데이터와 현장 분석을 통해, 매수·임차인에게는 안전한
               선택을, 소유주님께는 객관적인 자산 가치 증명을 브리핑해 드립니다.
+            </p>
+
+            <p className="flex items-center gap-2.5 mb-9 text-white/90 text-sm sm:text-base font-semibold">
+              <span className="w-7 h-0.5 bg-gold flex-shrink-0" />
+              <span>
+                알파고부동산은 늘{" "}
+                <span className="text-gold font-black">고객을 먼저</span>{" "}
+                생각합니다.
+              </span>
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
