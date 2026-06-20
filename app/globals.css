@@ -49,6 +49,8 @@ body {
   color: #1C2A3A;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* 한글이 음절 단위로 끊기지 않고 단어(띄어쓰기) 단위로 줄바꿈 */
+  word-break: keep-all;
 }
 
 @media (prefers-reduced-motion: reduce) {

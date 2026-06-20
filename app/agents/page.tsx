@@ -129,13 +129,13 @@ export default function AgentsPage() {
               {/* Info */}
               <div className="p-8 flex flex-col justify-between">
                 <div>
-                  <div className="flex items-start justify-between gap-4 mb-4">
-                    <div>
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
+                    <div className="min-w-0">
                       <p className="text-gold text-xs font-bold tracking-widest uppercase mb-1">{agent.office}</p>
-                      <h2 className="text-3xl font-black text-navy">{agent.name}</h2>
+                      <h2 className="text-3xl font-black text-navy whitespace-nowrap">{agent.name}</h2>
                       <p className="text-text-muted text-sm mt-0.5">{agent.title}</p>
                     </div>
-                    <div className="flex flex-wrap gap-1.5 justify-end">
+                    <div className="flex flex-wrap gap-1.5 sm:justify-end">
                       {agent.certifications.map((c) => (
                         <span key={c} className="flex items-center gap-1 text-xs px-2 py-1 bg-cream border border-border rounded-sm text-text-muted font-medium whitespace-nowrap">
                           <Award className="w-3 h-3 text-gold flex-shrink-0" />
