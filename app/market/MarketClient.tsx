@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { TradeItem, RentItem, formatAmount } from "@/lib/molit";
-import { TrendingUp, TrendingDown, BarChart3, List, Building2, Ruler, Flame, ChevronDown, Wallet } from "lucide-react";
+import { TrendingUp, TrendingDown, BarChart3, List, Building2, Ruler, Flame, ChevronDown, Wallet, ArrowLeftRight } from "lucide-react";
 
 interface Props {
   currentTrades: TradeItem[];
@@ -103,6 +103,9 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
 
   const displayYmd = `${currentYmd.slice(0, 4)}년 ${parseInt(currentYmd.slice(4), 10)}월`;
 
+  // 특정 단지를 선택하면 아파트명이 모두 같으므로 칼럼 숨김 (모바일 가독성)
+  const showAptName = complex === "전체";
+
   return (
     <div className="pt-16 min-h-screen bg-cream">
       {/* Page Header */}
@@ -115,7 +118,8 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
             옥정동 아파트 시세
           </h1>
           <p className="text-white/60">
-            경기도 양주시 옥정동 아파트 실거래가 및 전월세 현황 ({displayYmd} 기준)
+            경기도 양주시 옥정동 아파트 실거래가 및 전월세 현황
+            <span className="block sm:inline sm:ml-1">({displayYmd} 기준)</span>
           </p>
         </div>
       </div>
@@ -298,6 +302,14 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
           )}
         </div>
 
+        {/* 모바일 가로 스크롤 힌트 (전체 단지일 때만 칼럼이 많음) */}
+        {showAptName && (
+          <p className="sm:hidden flex items-center justify-end gap-1 text-[11px] text-text-light mb-1.5">
+            <span>좌우로 밀어서 더 보기</span>
+            <ArrowLeftRight className="w-3 h-3" />
+          </p>
+        )}
+
         {/* Table */}
         <div className="bg-white rounded-sm border border-border mb-6">
           {tab === "trade" ? (
@@ -305,10 +317,13 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
               <table className="w-full">
                 <thead>
                   <tr className="bg-cream/50">
-                    {["아파트명", "전용면적", "층", "거래일", "거래금액"].map((h) => (
+                    {(showAptName
+                      ? ["아파트명", "전용면적", "층", "거래일", "거래금액"]
+                      : ["전용면적", "층", "거래일", "거래금액"]
+                    ).map((h) => (
                       <th
                         key={h}
-                        className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wide whitespace-nowrap"
+                        className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wide whitespace-nowrap"
                       >
                         {h}
                       </th>
@@ -318,26 +333,28 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
                 <tbody className="divide-y divide-border-light">
                   {filteredTrades.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-10 text-center text-text-muted text-sm">
+                      <td colSpan={showAptName ? 5 : 4} className="px-4 py-10 text-center text-text-muted text-sm">
                         해당 조건의 거래 내역이 없습니다.
                       </td>
                     </tr>
                   ) : (
                     filteredTrades.map((t, i) => (
                       <tr key={i} className="hover:bg-cream/40 transition-colors">
-                        <td className="px-4 py-3 text-sm font-medium text-navy whitespace-nowrap">
-                          {t.aptNm}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-text whitespace-nowrap">
+                        {showAptName && (
+                          <td className="px-3 sm:px-4 py-3 text-sm font-medium text-navy whitespace-nowrap">
+                            {t.aptNm}
+                          </td>
+                        )}
+                        <td className="px-3 sm:px-4 py-3 text-sm text-text whitespace-nowrap">
                           {parseFloat(t.excluUseAr).toFixed(1)}㎡
                         </td>
-                        <td className="px-4 py-3 text-sm text-text whitespace-nowrap">
+                        <td className="px-3 sm:px-4 py-3 text-sm text-text whitespace-nowrap">
                           {t.floor}층
                         </td>
-                        <td className="px-4 py-3 text-sm text-text-muted whitespace-nowrap">
+                        <td className="px-3 sm:px-4 py-3 text-sm text-text-muted whitespace-nowrap">
                           {t.dealYear}.{t.dealMonth}.{t.dealDay}
                         </td>
-                        <td className="px-4 py-3 text-sm font-bold text-navy whitespace-nowrap">
+                        <td className="px-3 sm:px-4 py-3 text-sm font-bold text-navy whitespace-nowrap">
                           {formatAmount(t.dealAmount)}원
                         </td>
                       </tr>
@@ -351,10 +368,13 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
               <table className="w-full">
                 <thead>
                   <tr className="bg-cream/50">
-                    {["아파트명", "전용면적", "층", "거래일", "유형", "보증금", "월세", "계약구분"].map((h) => (
+                    {(showAptName
+                      ? ["아파트명", "전용면적", "층", "거래일", "유형", "보증금", "월세", "계약구분"]
+                      : ["전용면적", "층", "거래일", "유형", "보증금", "월세", "계약구분"]
+                    ).map((h) => (
                       <th
                         key={h}
-                        className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wide whitespace-nowrap"
+                        className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wide whitespace-nowrap"
                       >
                         {h}
                       </th>
@@ -364,7 +384,7 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
                 <tbody className="divide-y divide-border-light">
                   {filteredRents.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-10 text-center text-text-muted text-sm">
+                      <td colSpan={showAptName ? 8 : 7} className="px-4 py-10 text-center text-text-muted text-sm">
                         해당 조건의 전월세 내역이 없습니다.
                       </td>
                     </tr>
@@ -373,19 +393,21 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
                       const isJeonse = !r.monthlyRent || r.monthlyRent === "0";
                       return (
                         <tr key={i} className="hover:bg-cream/40 transition-colors">
-                          <td className="px-4 py-3 text-sm font-medium text-navy whitespace-nowrap">
-                            {r.aptNm}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-text whitespace-nowrap">
+                          {showAptName && (
+                            <td className="px-3 sm:px-4 py-3 text-sm font-medium text-navy whitespace-nowrap">
+                              {r.aptNm}
+                            </td>
+                          )}
+                          <td className="px-3 sm:px-4 py-3 text-sm text-text whitespace-nowrap">
                             {parseFloat(r.excluUseAr).toFixed(1)}㎡
                           </td>
-                          <td className="px-4 py-3 text-sm text-text whitespace-nowrap">
+                          <td className="px-3 sm:px-4 py-3 text-sm text-text whitespace-nowrap">
                             {r.floor}층
                           </td>
-                          <td className="px-4 py-3 text-sm text-text-muted whitespace-nowrap">
+                          <td className="px-3 sm:px-4 py-3 text-sm text-text-muted whitespace-nowrap">
                             {r.dealYear}.{r.dealMonth}.{r.dealDay}
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-3 sm:px-4 py-3">
                             <span
                               className={`text-xs font-semibold px-2 py-0.5 rounded-sm ${
                                 isJeonse
@@ -396,13 +418,13 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
                               {isJeonse ? "전세" : "월세"}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-sm font-bold text-navy whitespace-nowrap">
+                          <td className="px-3 sm:px-4 py-3 text-sm font-bold text-navy whitespace-nowrap">
                             {formatAmount(r.deposit)}원
                           </td>
-                          <td className="px-4 py-3 text-sm text-text whitespace-nowrap">
+                          <td className="px-3 sm:px-4 py-3 text-sm text-text whitespace-nowrap">
                             {isJeonse ? "-" : `${r.monthlyRent}만원`}
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
+                          <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
                             {r.contractType ? (
                               <div className="flex items-center gap-1.5">
                                 <span
