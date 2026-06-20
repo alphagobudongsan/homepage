@@ -4,12 +4,16 @@ import { useState } from "react";
 import { CheckCircle, Send } from "lucide-react";
 
 const COMPLEXES = [
-  "옥정 센트럴 푸르지오",
-  "양주 옥정 아이파크",
-  "옥정 힐스테이트",
-  "옥정 e편한세상",
-  "옥정 롯데캐슬",
-  "옥정자이",
+  "e편한세상 옥정어반센트럴",
+  "옥정센트럴파크푸르지오",
+  "옥정중앙역중흥S-클래스센텀시티(1단지)",
+  "옥정중앙역중흥S-클래스센텀시티(2단지)",
+  "양주옥정신도시제일풍경채레이크시티1단지",
+  "양주옥정신도시제일풍경채레이크시티2단지",
+  "양주옥정신도시디에트르프레스티지",
+  "e편한세상 옥정에듀써밋",
+  "e편한세상 옥정더퍼스트",
+  "옥정 대방노블랜드더시그니처",
   "기타 / 미정",
 ];
 
@@ -24,15 +28,18 @@ const BUDGETS = [
 
 const SIZES = ["59㎡ 이하", "60~74㎡", "75~84㎡", "85~110㎡", "110㎡ 이상", "무관"];
 
-type PurposeType = "매매" | "전세" | "월세" | "투자상담" | "기타";
+type PurposeType = "매매" | "전세" | "월세" | "기타";
+type ModeType = "seek" | "list"; // seek: 집을 구해요(매수·임차), list: 집을 내놓아요(매도·임대)
 
 export default function ConsultationForm() {
+  const [mode, setMode] = useState<ModeType>("seek");
   const [purpose, setPurpose] = useState<PurposeType>("매매");
   const [form, setForm] = useState({
     name: "",
     phone: "",
     complex: "",
     budget: "",
+    price: "",
     size: "",
     moveDate: "",
     message: "",
@@ -78,14 +85,24 @@ export default function ConsultationForm() {
         </p>
         <div className="bg-cream rounded-sm p-4 text-left text-sm mb-6">
           <div className="grid grid-cols-2 gap-2">
-            <div className="text-text-muted">상담 유형</div>
+            <div className="text-text-muted">상담 구분</div>
+            <div className="font-semibold text-navy">
+              {mode === "seek" ? "집을 구해요 (매수·임차)" : "집을 내놓아요 (매도·임대)"}
+            </div>
+            <div className="text-text-muted">거래 유형</div>
             <div className="font-semibold text-navy">{purpose}</div>
             <div className="text-text-muted">연락처</div>
             <div className="font-semibold text-navy">{form.phone}</div>
-            <div className="text-text-muted">희망 단지</div>
+            <div className="text-text-muted">
+              {mode === "seek" ? "희망 단지" : "보유 단지"}
+            </div>
             <div className="font-semibold text-navy">{form.complex || "미정"}</div>
-            <div className="text-text-muted">예산</div>
-            <div className="font-semibold text-navy">{form.budget || "협의"}</div>
+            <div className="text-text-muted">
+              {mode === "seek" ? "예산" : "희망 가격"}
+            </div>
+            <div className="font-semibold text-navy">
+              {mode === "seek" ? form.budget || "협의" : form.price || "협의"}
+            </div>
           </div>
         </div>
         <button
@@ -96,6 +113,7 @@ export default function ConsultationForm() {
               phone: "",
               complex: "",
               budget: "",
+              price: "",
               size: "",
               moveDate: "",
               message: "",
@@ -123,28 +141,61 @@ export default function ConsultationForm() {
       </div>
 
       <div className="p-6 space-y-6">
-        {/* Purpose */}
+        {/* Mode — 상담 구분 */}
         <div>
           <label className="block text-sm font-semibold text-navy mb-2">
-            상담 유형 *
+            상담 구분 *
           </label>
-          <div className="flex flex-wrap gap-2">
-            {(["매매", "전세", "월세", "투자상담", "기타"] as PurposeType[]).map(
-              (p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setPurpose(p)}
-                  className={`px-4 py-2 text-sm font-semibold rounded-sm border transition-colors duration-150 cursor-pointer ${
-                    purpose === p
-                      ? "bg-navy text-white border-navy"
-                      : "border-border text-text-muted hover:border-navy hover:text-navy"
+          <div className="grid grid-cols-2 gap-2">
+            {(
+              [
+                { key: "seek", title: "집을 구해요", desc: "매수 · 임차" },
+                { key: "list", title: "집을 내놓아요", desc: "매도 · 임대" },
+              ] as { key: ModeType; title: string; desc: string }[]
+            ).map((m) => (
+              <button
+                key={m.key}
+                type="button"
+                onClick={() => setMode(m.key)}
+                className={`px-4 py-3 rounded-sm border text-left transition-colors duration-150 cursor-pointer ${
+                  mode === m.key
+                    ? "bg-navy text-white border-navy"
+                    : "border-border text-text-muted hover:border-navy hover:text-navy"
+                }`}
+              >
+                <div className="text-sm font-bold">{m.title}</div>
+                <div
+                  className={`text-xs mt-0.5 ${
+                    mode === m.key ? "text-white/70" : "text-text-light"
                   }`}
                 >
-                  {p}
-                </button>
-              )
-            )}
+                  {m.desc}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Purpose — 거래 유형 */}
+        <div>
+          <label className="block text-sm font-semibold text-navy mb-2">
+            거래 유형 *
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {(["매매", "전세", "월세", "기타"] as PurposeType[]).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setPurpose(p)}
+                className={`px-4 py-2 text-sm font-semibold rounded-sm border transition-colors duration-150 cursor-pointer ${
+                  purpose === p
+                    ? "bg-navy text-white border-navy"
+                    : "border-border text-text-muted hover:border-navy hover:text-navy"
+                }`}
+              >
+                {p}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -188,13 +239,13 @@ export default function ConsultationForm() {
           </div>
         </div>
 
-        {/* Complex */}
+        {/* Complex (label 적응형) */}
         <div>
           <label
             htmlFor="complex"
             className="block text-sm font-semibold text-navy mb-1.5"
           >
-            희망 단지
+            {mode === "seek" ? "희망 단지" : "보유(매물) 단지"}
           </label>
           <select
             id="complex"
@@ -212,36 +263,56 @@ export default function ConsultationForm() {
           </select>
         </div>
 
-        {/* Budget + Size */}
+        {/* 적응형: 구해요 → 예산/희망면적 / 내놓아요 → 희망가격/보유면적 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="budget"
-              className="block text-sm font-semibold text-navy mb-1.5"
-            >
-              예산 범위
-            </label>
-            <select
-              id="budget"
-              name="budget"
-              value={form.budget}
-              onChange={handleChange}
-              className="w-full px-3 py-2.5 border border-border rounded-sm text-sm text-text focus:outline-none focus:border-navy transition-colors cursor-pointer bg-white"
-            >
-              <option value="">예산을 선택하세요</option>
-              {BUDGETS.map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
-              ))}
-            </select>
-          </div>
+          {mode === "seek" ? (
+            <div>
+              <label
+                htmlFor="budget"
+                className="block text-sm font-semibold text-navy mb-1.5"
+              >
+                예산 범위
+              </label>
+              <select
+                id="budget"
+                name="budget"
+                value={form.budget}
+                onChange={handleChange}
+                className="w-full px-3 py-2.5 border border-border rounded-sm text-sm text-text focus:outline-none focus:border-navy transition-colors cursor-pointer bg-white"
+              >
+                <option value="">예산을 선택하세요</option>
+                {BUDGETS.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div>
+              <label
+                htmlFor="price"
+                className="block text-sm font-semibold text-navy mb-1.5"
+              >
+                희망 가격
+              </label>
+              <input
+                id="price"
+                name="price"
+                type="text"
+                value={form.price}
+                onChange={handleChange}
+                placeholder="예: 매매 4.2억 / 전세 2.5억 / 월세 1000·60"
+                className="w-full px-3 py-2.5 border border-border rounded-sm text-sm text-text placeholder:text-text-light focus:outline-none focus:border-navy transition-colors"
+              />
+            </div>
+          )}
           <div>
             <label
               htmlFor="size"
               className="block text-sm font-semibold text-navy mb-1.5"
             >
-              희망 면적
+              {mode === "seek" ? "희망 면적" : "보유 면적"}
             </label>
             <select
               id="size"
@@ -260,13 +331,13 @@ export default function ConsultationForm() {
           </div>
         </div>
 
-        {/* Move Date */}
+        {/* Move Date (label 적응형) */}
         <div>
           <label
             htmlFor="moveDate"
             className="block text-sm font-semibold text-navy mb-1.5"
           >
-            희망 이사 시기
+            {mode === "seek" ? "희망 이사 시기" : "입주 가능 시기"}
           </label>
           <input
             id="moveDate"
