@@ -86,10 +86,10 @@ export default function ConsultationPage() {
               <h2 className="font-bold text-navy text-sm mb-3">상담 보장 사항</h2>
               <ul className="space-y-2">
                 {[
-                  "100% 무료 상담",
-                  "개인정보 철저 보호",
-                  "비교 견적 제공",
-                  "계약 후 1년 AS 보장",
+                  "100% 맞춤형 무료 상담",
+                  "철저한 비밀 및 개인정보 보호",
+                  "실거래가 기반 객관적 매물 비교",
+                  "철저한 권리분석 및 안심 계약 보장",
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-2 text-sm text-text-muted">
                     <span className="w-1.5 h-1.5 rounded-full bg-gold flex-shrink-0" />
