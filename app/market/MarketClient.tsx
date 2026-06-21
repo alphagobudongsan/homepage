@@ -11,6 +11,7 @@ interface Props {
   prevTrades: TradeItem[];
   rentData: RentItem[];
   currentYmd: string;
+  accessDate: string;
 }
 
 const SIZE_RANGES = ["전체", "60㎡ 미만", "60~85㎡", "85~110㎡", "110㎡ 이상"];
@@ -40,7 +41,7 @@ function sizeInRange(ar: string, range: string): boolean {
   return sizeLabel(ar) === range;
 }
 
-export default function MarketClient({ currentTrades, prevTrades, rentData, currentYmd }: Props) {
+export default function MarketClient({ currentTrades, prevTrades, rentData, currentYmd, accessDate }: Props) {
   const [tab, setTab] = useState<"trade" | "rent">("trade");
   // 모바일 통합 리스트 종류 필터 (범례 클릭)
   const [mobileKind, setMobileKind] = useState<"전체" | "매매" | "전세" | "월세">("전체");
@@ -182,7 +183,9 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
           </h1>
           <p className="text-white/60">
             경기도 양주시 옥정동 아파트 실거래가 및 전월세 현황
-            <span className="block sm:inline sm:ml-1">({displayYmd} 기준)</span>
+            <span className="block sm:inline sm:ml-1">
+              (<span className="text-gold font-semibold">{accessDate}</span> 기준)
+            </span>
           </p>
         </div>
       </div>

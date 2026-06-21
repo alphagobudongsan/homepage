@@ -15,12 +15,21 @@ export default async function MarketPage() {
     fetchLatestAptRent("41630"),
   ]);
 
+  // 현재 접속 날짜 (한국 시간 기준, 매 요청마다 갱신)
+  const accessDate = new Date().toLocaleDateString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   return (
     <MarketClient
       currentTrades={tradeRes.items}
       prevTrades={[]}
       rentData={rentRes.items}
       currentYmd={tradeRes.ymd}
+      accessDate={accessDate}
     />
   );
 }
