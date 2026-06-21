@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Phone, ArrowUp, BarChart3 } from "lucide-react";
+import { Phone, ArrowUp, BarChart3, X, ChevronUp } from "lucide-react";
 
 // 공식 브랜드 로고 (Simple Icons)
 function KakaoIcon({ className = "" }: { className?: string }) {
@@ -66,6 +66,8 @@ const ACTIONS = [
 
 export default function FloatingActions() {
   const [showTop, setShowTop] = useState(false);
+  // 모바일에서 메뉴 접기/펴기 (기본: 펼침)
+  const [open, setOpen] = useState(true);
 
   useEffect(() => {
     const onScroll = () => setShowTop(window.scrollY > 300);
@@ -87,29 +89,45 @@ export default function FloatingActions() {
         </button>
       )}
 
-      {/* 모바일 전용: 옥정동 아파트 실거래가 확인 (가시성 강조) */}
-      <Link
-        href="/market"
-        aria-label="옥정동 아파트 실거래가 확인"
-        className="lg:hidden flex items-center gap-2 h-12 pl-3.5 pr-4 rounded-full shadow-lg bg-blue-600 text-white font-bold text-[13px] transition-transform duration-200 hover:scale-105 cursor-pointer"
+      {/* 접히는 그룹 — 모바일에선 open일 때만, PC(lg)는 항상 표시 */}
+      <div
+        className={`flex flex-col items-end gap-2 ${open ? "flex" : "hidden lg:flex"}`}
       >
-        <BarChart3 className="w-5 h-5 flex-shrink-0" />
-        <span className="whitespace-nowrap">실거래가 확인</span>
-      </Link>
-
-      {ACTIONS.map((a) => (
-        <a
-          key={a.label}
-          href={a.href}
-          target={a.external ? "_blank" : undefined}
-          rel={a.external ? "noopener noreferrer" : undefined}
-          aria-label={a.label}
-          className={`group flex items-center gap-2 h-12 pl-3.5 pr-4 rounded-full shadow-lg ${a.bg} ${a.text} font-bold text-[13px] transition-transform duration-200 hover:scale-105 cursor-pointer`}
+        {/* 모바일 전용: 옥정동 아파트 실거래가 확인 (가시성 강조) */}
+        <Link
+          href="/market"
+          aria-label="옥정동 아파트 실거래가 확인"
+          className="lg:hidden flex items-center gap-2 h-12 pl-3.5 pr-4 rounded-full shadow-lg bg-blue-600 text-white font-bold text-[13px] transition-transform duration-200 hover:scale-105 cursor-pointer"
         >
-          <a.Icon className="w-5 h-5 flex-shrink-0" />
-          <span className="whitespace-nowrap">{a.label}</span>
-        </a>
-      ))}
+          <BarChart3 className="w-5 h-5 flex-shrink-0" />
+          <span className="whitespace-nowrap">실거래가 확인</span>
+        </Link>
+
+        {ACTIONS.map((a) => (
+          <a
+            key={a.label}
+            href={a.href}
+            target={a.external ? "_blank" : undefined}
+            rel={a.external ? "noopener noreferrer" : undefined}
+            aria-label={a.label}
+            className={`group flex items-center gap-2 h-12 pl-3.5 pr-4 rounded-full shadow-lg ${a.bg} ${a.text} font-bold text-[13px] transition-transform duration-200 hover:scale-105 cursor-pointer`}
+          >
+            <a.Icon className="w-5 h-5 flex-shrink-0" />
+            <span className="whitespace-nowrap">{a.label}</span>
+          </a>
+        ))}
+      </div>
+
+      {/* 접기/펴기 토글 — 모바일 전용 */}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-label={open ? "메뉴 접기" : "메뉴 열기"}
+        aria-expanded={open}
+        className="lg:hidden flex items-center justify-center w-12 h-12 rounded-full bg-navy text-white shadow-lg hover:bg-navy-light transition-colors duration-200 cursor-pointer"
+      >
+        {open ? <X className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
+      </button>
     </div>
   );
 }
