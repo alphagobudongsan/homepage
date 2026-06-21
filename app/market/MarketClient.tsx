@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { TradeItem, RentItem, formatAmount } from "@/lib/molit";
 import { TrendingUp, TrendingDown, BarChart3, List, Building2, Ruler, Flame, ChevronDown, Wallet, ArrowLeftRight } from "lucide-react";
+import HoverFillButton from "@/components/ui/hover-fill-button";
 
 interface Props {
   currentTrades: TradeItem[];
@@ -40,7 +41,13 @@ function sizeInRange(ar: string, range: string): boolean {
 
 export default function MarketClient({ currentTrades, prevTrades, rentData, currentYmd }: Props) {
   const [tab, setTab] = useState<"trade" | "rent">("trade");
-  const [complex, setComplex] = useState("전체");
+  // 첫 화면 기본 단지: 옥정센트럴파크푸르지오 (실데이터에 있으면 그 이름, 없으면 전체)
+  const [complex, setComplex] = useState(() => {
+    const match = currentTrades.find(
+      (t) => normalizeName(t.aptNm) === normalizeName("옥정센트럴파크푸르지오")
+    );
+    return match ? match.aptNm : "전체";
+  });
   const [sizeRange, setSizeRange] = useState("전체");
 
   // 실제 데이터에서 단지명 목록을 동적으로 추출
@@ -127,25 +134,22 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Tabs + Filters */}
         <div className="bg-white rounded-sm border border-border mb-6">
-          <div className="flex items-center border-b border-border">
+          <div className="flex items-center gap-3 p-4 border-b border-border">
             {[
               { key: "trade", label: "매매 실거래가" },
               { key: "rent", label: "전월세" },
             ].map((t) => (
-              <button
+              <HoverFillButton
                 key={t.key}
+                active={tab === t.key}
                 onClick={() => {
                   setTab(t.key as "trade" | "rent");
                   setComplex("전체");
                 }}
-                className={`px-6 py-4 text-sm font-semibold transition-colors duration-150 cursor-pointer border-b-2 ${
-                  tab === t.key
-                    ? "text-navy border-gold"
-                    : "text-text-muted border-transparent hover:text-navy"
-                }`}
+                textClassName="px-5 py-2.5 text-sm"
               >
                 {t.label}
-              </button>
+              </HoverFillButton>
             ))}
           </div>
 
@@ -207,33 +211,27 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
 
             {/* 인기 단지 (고정) */}
             {popularOptions.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2 pt-1">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2.5 pt-1">
                 <span className="flex items-center gap-1 text-xs font-bold text-gold whitespace-nowrap">
                   <Flame className="w-3.5 h-3.5" />
                   인기 단지
                 </span>
-                <button
+                <HoverFillButton
+                  active={complex === "전체"}
                   onClick={() => setComplex("전체")}
-                  className={`px-3 py-1.5 text-xs rounded-sm border transition-colors duration-150 cursor-pointer ${
-                    complex === "전체"
-                      ? "bg-navy text-white border-navy"
-                      : "border-border text-text-muted hover:border-navy hover:text-navy"
-                  }`}
+                  textClassName="px-3 py-1.5 text-xs"
                 >
                   전체
-                </button>
+                </HoverFillButton>
                 {popularOptions.map((c) => (
-                  <button
+                  <HoverFillButton
                     key={c}
+                    active={complex === c}
                     onClick={() => setComplex(c)}
-                    className={`px-3 py-1.5 text-xs rounded-sm border transition-colors duration-150 cursor-pointer ${
-                      complex === c
-                        ? "bg-navy text-white border-navy"
-                        : "border-border text-text-muted hover:border-navy hover:text-navy"
-                    }`}
+                    textClassName="px-3 py-1.5 text-xs"
                   >
                     {c}
-                  </button>
+                  </HoverFillButton>
                 ))}
               </div>
             )}
