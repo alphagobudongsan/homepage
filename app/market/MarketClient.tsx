@@ -46,10 +46,10 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
   const [mobileKind, setMobileKind] = useState<"전체" | "매매" | "전세" | "월세">("전체");
   // 단지 드롭다운 '탭하세요' 손가락 힌트 (한 번 누르면 사라짐)
   const [tapHintDone, setTapHintDone] = useState(false);
-  // 첫 화면 기본 단지: 옥정센트럴파크푸르지오 (실데이터에 있으면 그 이름, 없으면 전체)
+  // 첫 화면 기본 단지: 옥정센트럴파크푸르지오 (매매·전월세 어느 쪽에든 있으면 그 이름, 없으면 전체)
   const [complex, setComplex] = useState(() => {
-    const match = currentTrades.find(
-      (t) => normalizeName(t.aptNm) === normalizeName("옥정센트럴파크푸르지오")
+    const match = [...currentTrades, ...rentData].find(
+      (d) => normalizeName(d.aptNm) === normalizeName("옥정센트럴파크푸르지오")
     );
     return match ? match.aptNm : "전체";
   });
@@ -199,10 +199,7 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
               <HoverFillButton
                 key={t.key}
                 active={tab === t.key}
-                onClick={() => {
-                  setTab(t.key as "trade" | "rent");
-                  setComplex("전체");
-                }}
+                onClick={() => setTab(t.key as "trade" | "rent")}
                 textClassName="px-5 py-2.5 text-sm"
               >
                 {t.label}
@@ -372,8 +369,8 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
                 <thead>
                   <tr className="bg-cream/50">
                     {(showAptName
-                      ? ["아파트명", "전용면적", "층", "거래일", "거래금액"]
-                      : ["전용면적", "층", "거래일", "거래금액"]
+                      ? ["유형", "아파트명", "전용면적", "층", "거래일", "거래금액"]
+                      : ["유형", "전용면적", "층", "거래일", "거래금액"]
                     ).map((h) => (
                       <th
                         key={h}
@@ -387,13 +384,18 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
                 <tbody className="divide-y divide-border-light">
                   {filteredTrades.length === 0 ? (
                     <tr>
-                      <td colSpan={showAptName ? 5 : 4} className="px-4 py-10 text-center text-text-muted text-sm">
+                      <td colSpan={showAptName ? 6 : 5} className="px-4 py-10 text-center text-text-muted text-sm">
                         해당 조건의 거래 내역이 없습니다.
                       </td>
                     </tr>
                   ) : (
                     filteredTrades.map((t, i) => (
                       <tr key={i} className="hover:bg-cream/40 transition-colors">
+                        <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-sm text-white bg-gold">
+                            매매
+                          </span>
+                        </td>
                         {showAptName && (
                           <td className="px-3 sm:px-4 py-3 text-sm font-medium text-navy whitespace-nowrap">
                             {t.aptNm}
@@ -463,10 +465,8 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
                           </td>
                           <td className="px-3 sm:px-4 py-3">
                             <span
-                              className={`text-xs font-semibold px-2 py-0.5 rounded-sm ${
-                                isJeonse
-                                  ? "bg-teal/10 text-teal"
-                                  : "bg-gold/10 text-gold-dark"
+                              className={`text-xs font-bold px-2 py-0.5 rounded-sm text-white ${
+                                isJeonse ? "bg-blue-600" : "bg-green-600"
                               }`}
                             >
                               {isJeonse ? "전세" : "월세"}
