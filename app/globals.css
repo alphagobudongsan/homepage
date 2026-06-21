@@ -53,6 +53,16 @@ body {
   word-break: keep-all;
 }
 
+/* 드롭다운 '탭하세요' 손가락 힌트 */
+@keyframes tapHint {
+  0%, 100% { transform: translateY(0) rotate(-8deg); }
+  35% { transform: translateY(9px) rotate(-2deg); }
+  70% { transform: translateY(0) rotate(-8deg); }
+}
+.animate-tap-hint {
+  animation: tapHint 1.3s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

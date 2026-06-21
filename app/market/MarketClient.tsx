@@ -2,8 +2,9 @@
 
 import { useState, useMemo } from "react";
 import { TradeItem, RentItem, formatAmount } from "@/lib/molit";
-import { TrendingUp, TrendingDown, BarChart3, List, Building2, Ruler, Flame, ChevronDown, Wallet, ArrowLeftRight } from "lucide-react";
+import { TrendingUp, TrendingDown, BarChart3, List, Building2, Ruler, Flame, Wallet, ArrowLeftRight, Pointer } from "lucide-react";
 import HoverFillButton from "@/components/ui/hover-fill-button";
+import SelectMenu from "@/components/ui/select-menu";
 
 interface Props {
   currentTrades: TradeItem[];
@@ -41,6 +42,10 @@ function sizeInRange(ar: string, range: string): boolean {
 
 export default function MarketClient({ currentTrades, prevTrades, rentData, currentYmd }: Props) {
   const [tab, setTab] = useState<"trade" | "rent">("trade");
+  // 모바일 통합 리스트 종류 필터 (범례 클릭)
+  const [mobileKind, setMobileKind] = useState<"전체" | "매매" | "전세" | "월세">("전체");
+  // 단지 드롭다운 '탭하세요' 손가락 힌트 (한 번 누르면 사라짐)
+  const [tapHintDone, setTapHintDone] = useState(false);
   // 첫 화면 기본 단지: 옥정센트럴파크푸르지오 (실데이터에 있으면 그 이름, 없으면 전체)
   const [complex, setComplex] = useState(() => {
     const match = currentTrades.find(
@@ -113,6 +118,57 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
   // 특정 단지를 선택하면 아파트명이 모두 같으므로 칼럼 숨김 (모바일 가독성)
   const showAptName = complex === "전체";
 
+  // 모바일 통합 리스트: 매매 + 전세 + 월세를 시간순으로 한 리스트에 (색상 구분)
+  const mobileDeals = useMemo(() => {
+    type Deal = {
+      kind: "매매" | "전세" | "월세";
+      aptNm: string;
+      price: string;
+      area: string;
+      floor: string;
+      date: string;
+      sortKey: number;
+      isRenew: boolean;
+    };
+    const key = (y: string, m: string, d: string) =>
+      Number(`${y}${m.padStart(2, "0")}${d.padStart(2, "0")}`);
+    const out: Deal[] = [];
+    filteredTrades.forEach((t) =>
+      out.push({
+        kind: "매매",
+        aptNm: t.aptNm,
+        price: `${formatAmount(t.dealAmount)}원`,
+        area: `${parseFloat(t.excluUseAr).toFixed(1)}㎡`,
+        floor: `${t.floor}층`,
+        date: `${t.dealYear}.${t.dealMonth}.${t.dealDay}`,
+        sortKey: key(t.dealYear, t.dealMonth, t.dealDay),
+        isRenew: false,
+      })
+    );
+    filteredRents.forEach((r) => {
+      const isJeonse = !r.monthlyRent || r.monthlyRent === "0";
+      out.push({
+        kind: isJeonse ? "전세" : "월세",
+        aptNm: r.aptNm,
+        price: isJeonse
+          ? `${formatAmount(r.deposit)}원`
+          : `${formatAmount(r.deposit)} / 월 ${r.monthlyRent}만`,
+        area: `${parseFloat(r.excluUseAr).toFixed(1)}㎡`,
+        floor: `${r.floor}층`,
+        date: `${r.dealYear}.${r.dealMonth}.${r.dealDay}`,
+        sortKey: key(r.dealYear, r.dealMonth, r.dealDay),
+        isRenew: r.contractType === "갱신",
+      });
+    });
+    return out.sort((a, b) => b.sortKey - a.sortKey);
+  }, [filteredTrades, filteredRents]);
+
+  const kindColor: Record<string, string> = {
+    매매: "bg-gold",
+    전세: "bg-blue-600",
+    월세: "bg-green-600",
+  };
+
   return (
     <div className="pt-16 min-h-screen bg-cream">
       {/* Page Header */}
@@ -134,7 +190,8 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Tabs + Filters */}
         <div className="bg-white rounded-sm border border-border mb-6">
-          <div className="flex items-center gap-3 p-4 border-b border-border">
+          {/* 탭: PC 전용 (모바일은 통합 리스트로 대체) */}
+          <div className="hidden lg:flex items-center gap-3 p-4 border-b border-border">
             {[
               { key: "trade", label: "매매 실거래가" },
               { key: "rent", label: "전월세" },
@@ -158,54 +215,53 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
             <div className="flex flex-col sm:flex-row gap-3">
               {/* 아파트 단지 선택 */}
               <div className="flex-1">
-                <label
-                  htmlFor="complex-select"
-                  className="flex items-center gap-1.5 text-xs font-semibold text-navy mb-1.5"
-                >
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-navy mb-1.5">
                   <Building2 className="w-3.5 h-3.5 text-gold" />
                   아파트 단지 선택
                 </label>
-                <div className="relative">
-                  <select
-                    id="complex-select"
+                <div
+                  className="relative"
+                  onClick={() => setTapHintDone(true)}
+                >
+                  <SelectMenu
+                    ariaLabel="아파트 단지 선택"
                     value={complex}
-                    onChange={(e) => setComplex(e.target.value)}
-                    className="w-full appearance-none bg-white border border-border rounded-sm pl-3 pr-9 py-2.5 text-sm text-navy font-medium cursor-pointer hover:border-navy focus:border-gold focus:outline-none transition-colors"
-                  >
-                    {complexOptions.map((c) => (
-                      <option key={c} value={c}>
-                        {c === "전체" ? "전체 단지" : c}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-text-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    onChange={(v) => {
+                      setComplex(v);
+                      setTapHintDone(true);
+                    }}
+                    options={complexOptions.map((c) => ({
+                      value: c,
+                      label: c === "전체" ? "전체 단지" : c,
+                    }))}
+                  />
+                  {/* 탭하세요 손가락 힌트 */}
+                  {!tapHintDone && (
+                    <div className="absolute -right-1 -bottom-5 z-20 pointer-events-none flex flex-col items-center">
+                      <Pointer className="w-6 h-6 text-gold fill-white drop-shadow animate-tap-hint" />
+                      <span className="mt-0.5 text-[10px] font-bold text-gold bg-white/90 px-1.5 py-0.5 rounded-sm shadow-sm whitespace-nowrap">
+                        탭하여 단지 선택
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* 면적 선택 */}
               <div className="sm:w-56">
-                <label
-                  htmlFor="size-select"
-                  className="flex items-center gap-1.5 text-xs font-semibold text-navy mb-1.5"
-                >
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-navy mb-1.5">
                   <Ruler className="w-3.5 h-3.5 text-gold" />
                   면적 선택
                 </label>
-                <div className="relative">
-                  <select
-                    id="size-select"
-                    value={sizeRange}
-                    onChange={(e) => setSizeRange(e.target.value)}
-                    className="w-full appearance-none bg-white border border-border rounded-sm pl-3 pr-9 py-2.5 text-sm text-navy font-medium cursor-pointer hover:border-gold focus:border-gold focus:outline-none transition-colors"
-                  >
-                    {SIZE_RANGES.map((s) => (
-                      <option key={s} value={s}>
-                        {s === "전체" ? "전체 면적" : s}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-4 h-4 text-text-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
+                <SelectMenu
+                  ariaLabel="면적 선택"
+                  value={sizeRange}
+                  onChange={setSizeRange}
+                  options={SIZE_RANGES.map((s) => ({
+                    value: s,
+                    label: s === "전체" ? "전체 면적" : s,
+                  }))}
+                />
               </div>
             </div>
 
@@ -302,14 +358,14 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
 
         {/* 모바일 가로 스크롤 힌트 (전체 단지일 때만 칼럼이 많음) */}
         {showAptName && (
-          <p className="sm:hidden flex items-center justify-end gap-1 text-[11px] text-text-light mb-1.5">
+          <p className="hidden lg:flex items-center justify-end gap-1 text-[11px] text-text-light mb-1.5">
             <span>좌우로 밀어서 더 보기</span>
             <ArrowLeftRight className="w-3 h-3" />
           </p>
         )}
 
-        {/* Table */}
-        <div className="bg-white rounded-sm border border-border mb-6">
+        {/* Table (PC 전용) */}
+        <div className="hidden lg:block bg-white rounded-sm border border-border mb-6">
           {tab === "trade" ? (
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -453,6 +509,79 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
                   )}
                 </tbody>
               </table>
+            </div>
+          )}
+        </div>
+
+        {/* 모바일 통합 실거래 리스트 (매매/전세/월세 색상 구분 + 클릭 필터) */}
+        <div className="lg:hidden bg-white rounded-sm border border-border mb-6 overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-3 border-b border-border-light">
+            {([
+              { key: "전체", dot: "bg-navy", active: "bg-navy" },
+              { key: "매매", dot: "bg-gold", active: "bg-gold" },
+              { key: "전세", dot: "bg-blue-600", active: "bg-blue-600" },
+              { key: "월세", dot: "bg-green-600", active: "bg-green-600" },
+            ] as const).map((f) => {
+              const isOn = mobileKind === f.key;
+              return (
+                <button
+                  key={f.key}
+                  type="button"
+                  onClick={() => setMobileKind(f.key)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold border transition-colors cursor-pointer ${
+                    isOn
+                      ? `${f.active} text-white border-transparent`
+                      : "bg-white text-navy border-border"
+                  }`}
+                >
+                  {f.key !== "전체" && (
+                    <span
+                      className={`w-2 h-2 rounded-full ${isOn ? "bg-white" : f.dot}`}
+                    />
+                  )}
+                  {f.key}
+                </button>
+              );
+            })}
+          </div>
+          {mobileDeals.filter((d) => mobileKind === "전체" || d.kind === mobileKind).length === 0 ? (
+            <div className="px-4 py-10 text-center text-text-muted text-sm">
+              해당 조건의 거래 내역이 없습니다.
+            </div>
+          ) : (
+            <div className="divide-y divide-border-light">
+              {mobileDeals
+                .filter((d) => mobileKind === "전체" || d.kind === mobileKind)
+                .map((d, i) => (
+                <div key={i} className="px-4 py-3">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`text-[11px] font-bold px-2 py-0.5 rounded-sm text-white ${kindColor[d.kind]}`}
+                      >
+                        {d.kind}
+                      </span>
+                      {d.isRenew && (
+                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-sm bg-navy/5 text-navy">
+                          갱신
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-text-muted">{d.date}</span>
+                  </div>
+                  {showAptName && (
+                    <p className="text-sm font-medium text-navy mb-0.5 truncate">
+                      {d.aptNm}
+                    </p>
+                  )}
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-base font-bold text-navy">{d.price}</span>
+                    <span className="text-xs text-text-muted whitespace-nowrap">
+                      {d.area} · {d.floor}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

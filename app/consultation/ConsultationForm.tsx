@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CheckCircle, Send, MessageCircle } from "lucide-react";
+import SelectMenu from "@/components/ui/select-menu";
 
 const COMPLEXES = [
   "e편한세상 옥정어반센트럴",
@@ -286,52 +287,32 @@ export default function ConsultationForm() {
 
         {/* Complex (label 적응형) */}
         <div>
-          <label
-            htmlFor="complex"
-            className="block text-sm font-semibold text-navy mb-1.5"
-          >
+          <label className="block text-sm font-semibold text-navy mb-1.5">
             {mode === "seek" ? "희망 단지" : "보유(매물) 단지"}
           </label>
-          <select
-            id="complex"
-            name="complex"
+          <SelectMenu
+            ariaLabel={mode === "seek" ? "희망 단지" : "보유 단지"}
             value={form.complex}
-            onChange={handleChange}
-            className="w-full px-3 py-2.5 border border-border rounded-sm text-sm text-text focus:outline-none focus:border-navy transition-colors cursor-pointer bg-white"
-          >
-            <option value="">단지를 선택하세요</option>
-            {COMPLEXES.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => setForm((p) => ({ ...p, complex: v }))}
+            placeholder="단지를 선택하세요"
+            options={COMPLEXES.map((c) => ({ value: c, label: c }))}
+          />
         </div>
 
         {/* 적응형: 구해요 → 예산/희망면적 / 내놓아요 → 희망가격/보유면적 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {mode === "seek" ? (
             <div>
-              <label
-                htmlFor="budget"
-                className="block text-sm font-semibold text-navy mb-1.5"
-              >
+              <label className="block text-sm font-semibold text-navy mb-1.5">
                 예산 범위
               </label>
-              <select
-                id="budget"
-                name="budget"
+              <SelectMenu
+                ariaLabel="예산 범위"
                 value={form.budget}
-                onChange={handleChange}
-                className="w-full px-3 py-2.5 border border-border rounded-sm text-sm text-text focus:outline-none focus:border-navy transition-colors cursor-pointer bg-white"
-              >
-                <option value="">예산을 선택하세요</option>
-                {BUDGETS.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => setForm((p) => ({ ...p, budget: v }))}
+                placeholder="예산을 선택하세요"
+                options={BUDGETS.map((b) => ({ value: b, label: b }))}
+              />
             </div>
           ) : (
             <div>
@@ -353,26 +334,16 @@ export default function ConsultationForm() {
             </div>
           )}
           <div>
-            <label
-              htmlFor="size"
-              className="block text-sm font-semibold text-navy mb-1.5"
-            >
+            <label className="block text-sm font-semibold text-navy mb-1.5">
               {mode === "seek" ? "희망 면적" : "보유 면적"}
             </label>
-            <select
-              id="size"
-              name="size"
+            <SelectMenu
+              ariaLabel={mode === "seek" ? "희망 면적" : "보유 면적"}
               value={form.size}
-              onChange={handleChange}
-              className="w-full px-3 py-2.5 border border-border rounded-sm text-sm text-text focus:outline-none focus:border-navy transition-colors cursor-pointer bg-white"
-            >
-              <option value="">면적을 선택하세요</option>
-              {SIZES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setForm((p) => ({ ...p, size: v }))}
+              placeholder="면적을 선택하세요"
+              options={SIZES.map((s) => ({ value: s, label: s }))}
+            />
           </div>
         </div>
 
