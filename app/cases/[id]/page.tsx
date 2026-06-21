@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { cases, getCaseById } from "@/lib/cases";
+import { SITE_URL, SITE_NAME } from "@/lib/site";
 import {
   ChevronLeft,
   ChevronRight,
@@ -26,7 +27,23 @@ export async function generateMetadata({
   return {
     title: `${c.title} | 알파고 공인중개사사무소`,
     description: c.summary,
+    keywords: `옥정신도시, 옥정동 아파트, ${c.tag}, ${c.complex}, 부동산 사례, 공인중개사`,
+    alternates: { canonical: `${SITE_URL}/cases/${c.id}` },
+    openGraph: {
+      type: "article",
+      title: c.title,
+      description: c.summary,
+      url: `${SITE_URL}/cases/${c.id}`,
+      siteName: SITE_NAME,
+      locale: "ko_KR",
+    },
   };
+}
+
+// 사례 날짜("2026년 5월") → ISO(YYYY-MM-01)
+function toISODate(d: string): string | undefined {
+  const m = d.match(/(\d{4})년\s*(\d{1,2})월/);
+  return m ? `${m[1]}-${m[2].padStart(2, "0")}-01` : undefined;
 }
 
 const tagColor: Record<string, string> = {
@@ -51,8 +68,31 @@ export default async function CaseDetailPage({
   // Parse content into paragraphs/sections
   const contentParts = c.content.split("\n\n").filter(Boolean);
 
+  // AI 봇·검색엔진용 구조화 데이터 (사례 = Article)
+  const caseJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: c.title,
+    description: c.summary,
+    articleBody: c.content.replace(/\n+/g, " ").trim(),
+    inLanguage: "ko",
+    datePublished: toISODate(c.date),
+    keywords: ["옥정신도시", "옥정동 아파트", c.tag, c.complex, "부동산 사례"].join(", "),
+    author: { "@type": "Organization", name: SITE_NAME },
+    publisher: {
+      "@type": "RealEstateAgent",
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
+    mainEntityOfPage: `${SITE_URL}/cases/${c.id}`,
+  };
+
   return (
     <div className="pt-16 min-h-screen bg-cream">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(caseJsonLd) }}
+      />
       {/* Breadcrumb */}
       <div className="bg-white border-b border-border">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3">

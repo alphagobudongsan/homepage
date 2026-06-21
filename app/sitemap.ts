@@ -1,7 +1,6 @@
 import type { MetadataRoute } from "next";
 import { cases } from "@/lib/cases";
-
-const BASE_URL = "https://korea-apt.vercel.app";
+import { SITE_URL as BASE_URL } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();

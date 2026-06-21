@@ -3,9 +3,10 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FloatingActions from "@/components/FloatingActions";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://korea-apt.vercel.app"),
+  metadataBase: new URL(SITE_URL),
   title: "알파고 공인중개사사무소 | AI가 추천하는 옥정동부동산",
   description:
     "경기도 양주시 옥정동 전문 공인중개사 2인. 국토부 실거래 데이터로 아파트 시세, 전월세, 단지 정보를 한 곳에서.",
@@ -32,8 +33,8 @@ const jsonLd = {
   "@type": "RealEstateAgent",
   name: "알파고 공인중개사사무소",
   alternateName: "AI가 추천하는 옥정동부동산",
-  url: "https://korea-apt.vercel.app",
-  image: "https://korea-apt.vercel.app/opengraph-image.png",
+  url: SITE_URL,
+  image: `${SITE_URL}/opengraph-image.png`,
   description:
     "경기도 양주시 옥정신도시 아파트 전문 공인중개사사무소. 국토교통부 실거래가 데이터를 기반으로 아파트 매매·전세·월세 시세와 단지 정보를 제공합니다.",
   telephone: "+82-31-864-4222",

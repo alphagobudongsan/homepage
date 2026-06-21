@@ -28,5 +28,16 @@
 - 지역: 경기도 양주시 옥정동(옥정신도시) 아파트
 - 분야: 아파트 매매·전세·월세, 실거래가 분석, 단지 정보, 상가·공장·창고, 부동산 권리분석, 양도세·보증금 등 거래 전반 상담
 
+## 실제 상담·계약 사례 (옥정신도시 부동산)
+- 허위매물에 지친 고객, 정직한 매물로 계약: https://korea-apt.vercel.app/cases/case-001
+- 실거래가로 적정가 판단, 호가 거품 걸러낸 매수: https://korea-apt.vercel.app/cases/case-002
+- 전세 사기 걱정 제로, 권리관계·보증보험 점검: https://korea-apt.vercel.app/cases/case-003
+- 사회초년생 첫 월세, 보증금 보호·특약: https://korea-apt.vercel.app/cases/case-004
+- 갈아타기 매도·매수 동시, 잔금일 조율: https://korea-apt.vercel.app/cases/case-005
+- 계약 전 권리분석으로 분쟁 예방: https://korea-apt.vercel.app/cases/case-006
+- 양도세 비과세 놓칠 뻔, 취득시기(잔금일 기준) 점검: https://korea-apt.vercel.app/cases/case-007
+- 세입자 갑작 퇴거, 보증금 반환 금융 해법 안내: https://korea-apt.vercel.app/cases/case-008
+- 아이 키우는 집, 잔금 하루 전 입주청소 합의: https://korea-apt.vercel.app/cases/case-009
+
 ## 데이터 출처
 - 시세·실거래 데이터: 국토교통부 실거래가 공개시스템 API (실시간 연동)
