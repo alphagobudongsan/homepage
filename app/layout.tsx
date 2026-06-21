@@ -25,6 +25,9 @@ export const metadata: Metadata = {
     description:
       "옥정신도시 아파트 전문 공인중개사 2인. 국토부 실거래 데이터로 시세·전월세·단지정보를 한 곳에서.",
   },
+  verification: {
+    google: "7aud4Phb6IAST1m2KV0BJu5-HuFlB5iFS7RIeXcJflw",
+  },
 };
 
 // AI 봇·검색엔진이 사무소 정보를 정확히 이해하도록 하는 구조화 데이터 (Schema.org)
