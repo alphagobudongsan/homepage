@@ -2,17 +2,20 @@
 
 import { useState, useMemo } from "react";
 import { TradeItem, RentItem, formatAmount } from "@/lib/molit";
-import { TrendingUp, TrendingDown, BarChart3, List, Building2, Ruler, Flame, Wallet, ArrowLeftRight, Pointer } from "lucide-react";
+import { TrendingUp, TrendingDown, BarChart3, List, Building2, Ruler, Flame, Wallet, ArrowLeftRight, Pointer, ChevronDown } from "lucide-react";
 import HoverFillButton from "@/components/ui/hover-fill-button";
 import SelectMenu from "@/components/ui/select-menu";
 
 interface Props {
-  currentTrades: TradeItem[];
-  prevTrades: TradeItem[];
-  rentData: RentItem[];
-  currentYmd: string;
+  trades: TradeItem[]; // 최근 6개월 매매
+  rents: RentItem[];   // 최근 6개월 전월세
+  currentYmd: string;  // 데이터가 있는 최신 거래월 (yyyymm)
   accessDate: string;
 }
+
+// 거래 정렬용 키 (yyyymmdd 숫자)
+const dateKey = (y: string, m: string, d: string) =>
+  Number(`${y}${m.padStart(2, "0")}${d.padStart(2, "0")}`);
 
 const SIZE_RANGES = ["전체", "60㎡ 미만", "60~85㎡", "85~110㎡", "110㎡ 이상"];
 
@@ -41,27 +44,62 @@ function sizeInRange(ar: string, range: string): boolean {
   return sizeLabel(ar) === range;
 }
 
-export default function MarketClient({ currentTrades, prevTrades, rentData, currentYmd, accessDate }: Props) {
-  const [tab, setTab] = useState<"trade" | "rent">("trade");
+type DealKind = "매매" | "전세" | "월세";
+
+// 유형별 요약 (매매=거래가 / 전세·월세=보증금)
+function computeSummary(kind: DealKind, trades: TradeItem[], rents: RentItem[]) {
+  let amounts: number[] = [];
+  let unit = "거래가";
+  if (kind === "매매") {
+    amounts = trades.map((t) => parseInt(t.dealAmount.replace(/,/g, ""), 10));
+    unit = "거래가";
+  } else {
+    const arr = rents.filter((r) => {
+      const isJeonse = !r.monthlyRent || r.monthlyRent === "0";
+      return kind === "전세" ? isJeonse : !isJeonse;
+    });
+    amounts = arr.map((r) => parseInt(r.deposit.replace(/,/g, ""), 10));
+    unit = kind === "전세" ? "전세보증금" : "월세보증금";
+  }
+  if (amounts.length === 0) return { kind, unit, count: 0, avg: 0, max: 0, min: 0 };
+  const avg = Math.round(amounts.reduce((a, b) => a + b, 0) / amounts.length);
+  return { kind, unit, count: amounts.length, avg, max: Math.max(...amounts), min: Math.min(...amounts) };
+}
+
+export default function MarketClient({ trades, rents, currentYmd, accessDate }: Props) {
+  const [tab, setTab] = useState<DealKind>("매매");
   // 모바일 통합 리스트 종류 필터 (범례 클릭)
   const [mobileKind, setMobileKind] = useState<"전체" | "매매" | "전세" | "월세">("전체");
   // 단지 드롭다운 '탭하세요' 손가락 힌트 (한 번 누르면 사라짐)
   const [tapHintDone, setTapHintDone] = useState(false);
-  // 첫 화면 기본 단지: 옥정센트럴파크푸르지오 (매매·전월세 어느 쪽에든 있으면 그 이름, 없으면 전체)
+  // 과거 거래 더보기 (리스트만 과거 월까지 펼침. 전광판은 최신월 고정)
+  const [showMore, setShowMore] = useState(false);
+  // 첫 화면 기본 단지: 옥정센트럴파크푸르지오 (있으면 그 이름, 없으면 전체)
   const [complex, setComplex] = useState(() => {
-    const match = [...currentTrades, ...rentData].find(
+    const match = [...trades, ...rents].find(
       (d) => normalizeName(d.aptNm) === normalizeName("옥정센트럴파크푸르지오")
     );
     return match ? match.aptNm : "전체";
   });
   const [sizeRange, setSizeRange] = useState("전체");
 
-  // 실제 데이터에서 단지명 목록을 동적으로 추출
+  // 최신 거래월(전광판용) 데이터
+  const ymOf = (y: string, m: string) => `${y}${m.padStart(2, "0")}`;
+  const latestTrades = useMemo(
+    () => trades.filter((t) => ymOf(t.dealYear, t.dealMonth) === currentYmd),
+    [trades, currentYmd]
+  );
+  const latestRents = useMemo(
+    () => rents.filter((r) => ymOf(r.dealYear, r.dealMonth) === currentYmd),
+    [rents, currentYmd]
+  );
+
+  // 단지 드롭다운 목록: 6개월 전체 데이터 기준
   const complexOptions = useMemo(() => {
-    const source = tab === "trade" ? currentTrades : rentData;
+    const source = tab === "매매" ? trades : rents;
     const names = Array.from(new Set(source.map((d) => d.aptNm))).sort();
     return ["전체", ...names];
-  }, [tab, currentTrades, rentData]);
+  }, [tab, trades, rents]);
 
   // 인기 단지 칩: 실제 데이터에 존재하는 단지명으로 매핑 (공백 무시)
   const popularOptions = useMemo(() => {
@@ -70,49 +108,64 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
     ).filter((c): c is string => Boolean(c));
   }, [complexOptions]);
 
-  const filteredTrades = useMemo(() =>
-    currentTrades.filter(
-      (t) =>
-        (complex === "전체" || t.aptNm === complex) &&
-        sizeInRange(t.excluUseAr, sizeRange)
-    ),
-    [currentTrades, complex, sizeRange]
+  const matchFilter = (aptNm: string, ar: string) =>
+    (complex === "전체" || aptNm === complex) && sizeInRange(ar, sizeRange);
+
+  // 전광판/요약용: 최신 거래월만
+  const filteredTrades = useMemo(
+    () => latestTrades.filter((t) => matchFilter(t.aptNm, t.excluUseAr)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [latestTrades, complex, sizeRange]
+  );
+  const filteredRents = useMemo(
+    () => latestRents.filter((r) => matchFilter(r.aptNm, r.excluUseAr)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [latestRents, complex, sizeRange]
   );
 
-  const filteredRents = useMemo(() =>
-    rentData.filter(
-      (r) =>
-        (complex === "전체" || r.aptNm === complex) &&
-        sizeInRange(r.excluUseAr, sizeRange)
-    ),
-    [rentData, complex, sizeRange]
+  // 리스트용: 6개월 전체(더보기) — 최신순 정렬
+  const allFilteredTrades = useMemo(
+    () =>
+      trades
+        .filter((t) => matchFilter(t.aptNm, t.excluUseAr))
+        .sort((a, b) => dateKey(b.dealYear, b.dealMonth, b.dealDay) - dateKey(a.dealYear, a.dealMonth, a.dealDay)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [trades, complex, sizeRange]
+  );
+  const allFilteredRents = useMemo(
+    () =>
+      rents
+        .filter((r) => matchFilter(r.aptNm, r.excluUseAr))
+        .sort((a, b) => dateKey(b.dealYear, b.dealMonth, b.dealDay) - dateKey(a.dealYear, a.dealMonth, a.dealDay)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rents, complex, sizeRange]
   );
 
-  const summary = useMemo(() => {
-    if (filteredTrades.length === 0) return null;
-    const amounts = filteredTrades.map((t) =>
-      parseInt(t.dealAmount.replace(/,/g, ""), 10)
-    );
-    const avg = Math.round(amounts.reduce((a, b) => a + b, 0) / amounts.length);
-    const max = Math.max(...amounts);
-    const min = Math.min(...amounts);
-    return { avg, max, min, count: filteredTrades.length };
-  }, [filteredTrades]);
+  // 실제 표시(리스트): 더보기 전엔 최신월만, 누르면 6개월 전체
+  const sortLatestFirst = <T extends { dealYear: string; dealMonth: string; dealDay: string }>(arr: T[]) =>
+    [...arr].sort((a, b) => dateKey(b.dealYear, b.dealMonth, b.dealDay) - dateKey(a.dealYear, a.dealMonth, a.dealDay));
+  const displayedTrades = showMore ? allFilteredTrades : sortLatestFirst(filteredTrades);
+  const displayedRents = showMore ? allFilteredRents : sortLatestFirst(filteredRents);
+  // PC 전세/월세 탭: 해당 유형만
+  const displayedRentsForTab = displayedRents.filter((r) => {
+    const isJeonse = !r.monthlyRent || r.monthlyRent === "0";
+    return tab === "월세" ? !isJeonse : isJeonse;
+  });
+  const hasMore =
+    allFilteredTrades.length > filteredTrades.length ||
+    allFilteredRents.length > filteredRents.length;
 
-  // 전월세 전광판: 전세 보증금만 기준으로 집계 (월세 제외)
-  const rentSummary = useMemo(() => {
-    const jeonse = filteredRents.filter(
-      (r) => !r.monthlyRent || r.monthlyRent === "0"
-    );
-    if (jeonse.length === 0) return null;
-    const deposits = jeonse.map((r) =>
-      parseInt(r.deposit.replace(/,/g, ""), 10)
-    );
-    const avg = Math.round(deposits.reduce((a, b) => a + b, 0) / deposits.length);
-    const max = Math.max(...deposits);
-    const min = Math.min(...deposits);
-    return { avg, max, min, count: jeonse.length };
-  }, [filteredRents]);
+  // 유형별 요약 (매매=거래가 / 전세·월세=보증금)
+  const pcSummary = useMemo(
+    () => computeSummary(tab, filteredTrades, filteredRents),
+    [tab, filteredTrades, filteredRents]
+  );
+
+  // 모바일 전광판: 범례 선택(전체는 매매 기준)
+  const mobileSummary = useMemo(
+    () => computeSummary(mobileKind === "전체" ? "매매" : mobileKind, filteredTrades, filteredRents),
+    [mobileKind, filteredTrades, filteredRents]
+  );
 
   const displayYmd = `${currentYmd.slice(0, 4)}년 ${parseInt(currentYmd.slice(4), 10)}월`;
 
@@ -134,7 +187,7 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
     const key = (y: string, m: string, d: string) =>
       Number(`${y}${m.padStart(2, "0")}${d.padStart(2, "0")}`);
     const out: Deal[] = [];
-    filteredTrades.forEach((t) =>
+    displayedTrades.forEach((t) =>
       out.push({
         kind: "매매",
         aptNm: t.aptNm,
@@ -146,7 +199,7 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
         isRenew: false,
       })
     );
-    filteredRents.forEach((r) => {
+    displayedRents.forEach((r) => {
       const isJeonse = !r.monthlyRent || r.monthlyRent === "0";
       out.push({
         kind: isJeonse ? "전세" : "월세",
@@ -162,7 +215,7 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
       });
     });
     return out.sort((a, b) => b.sortKey - a.sortKey);
-  }, [filteredTrades, filteredRents]);
+  }, [displayedTrades, displayedRents]);
 
   const kindColor: Record<string, string> = {
     매매: "bg-gold",
@@ -193,19 +246,16 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Tabs + Filters */}
         <div className="bg-white rounded-sm border border-border mb-6">
-          {/* 탭: PC 전용 (모바일은 통합 리스트로 대체) */}
+          {/* 탭: PC 전용 (매매/전세/월세). 모바일은 통합 리스트로 대체 */}
           <div className="hidden lg:flex items-center gap-3 p-4 border-b border-border">
-            {[
-              { key: "trade", label: "매매 실거래가" },
-              { key: "rent", label: "전월세" },
-            ].map((t) => (
+            {(["매매", "전세", "월세"] as DealKind[]).map((k) => (
               <HoverFillButton
-                key={t.key}
-                active={tab === t.key}
-                onClick={() => setTab(t.key as "trade" | "rent")}
+                key={k}
+                active={tab === k}
+                onClick={() => setTab(k)}
                 textClassName="px-5 py-2.5 text-sm"
               >
-                {t.label}
+                {k}
               </HoverFillButton>
             ))}
           </div>
@@ -294,8 +344,8 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
           </div>
         </div>
 
-        {/* 전광판 (선택 단지·면적 기준 요약) */}
-        <div className="mb-6">
+        {/* 전광판 — PC 전용 (탭 기준) */}
+        <div className="hidden lg:block mb-6">
           <div className="flex flex-wrap items-center gap-2 mb-3">
             <Building2 className="w-4 h-4 text-gold" />
             <h2 className="text-base font-bold text-navy">
@@ -305,40 +355,21 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
               {sizeRange === "전체" ? "전체 면적" : sizeRange}
             </span>
             <span className="text-xs text-text-light">
-              · {tab === "trade" ? "매매" : "전월세"} 기준 ({displayYmd})
+              · {tab} 기준 ({displayYmd})
             </span>
           </div>
 
-          {tab === "trade" ? (
-            summary ? (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                  { label: "조회 거래 건수", value: `${summary.count}건`, icon: List },
-                  { label: "평균 거래가", value: `${formatAmount(String(summary.avg))}원`, icon: BarChart3 },
-                  { label: "최고 거래가", value: `${formatAmount(String(summary.max))}원`, icon: TrendingUp },
-                  { label: "최저 거래가", value: `${formatAmount(String(summary.min))}원`, icon: TrendingDown },
-                ].map((s) => (
-                  <div key={s.label} className="bg-white rounded-sm border border-border p-5">
-                    <div className="flex items-center gap-2 mb-2">
-                      <s.icon className="w-4 h-4 text-gold" />
-                      <span className="text-xs text-text-muted">{s.label}</span>
-                    </div>
-                    <div className="text-xl font-bold text-navy">{s.value}</div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-white rounded-sm border border-border p-6 text-center text-sm text-text-muted">
-                해당 조건의 매매 거래 내역이 없습니다.
-              </div>
-            )
-          ) : rentSummary ? (
+          {pcSummary.count === 0 ? (
+            <div className="bg-white rounded-sm border border-border p-6 text-center text-sm text-text-muted">
+              해당 조건의 {tab} 내역이 없습니다.
+            </div>
+          ) : (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { label: "전세 거래 건수", value: `${rentSummary.count}건`, icon: List },
-                { label: "평균 전세보증금", value: `${formatAmount(String(rentSummary.avg))}원`, icon: Wallet },
-                { label: "최고 전세보증금", value: `${formatAmount(String(rentSummary.max))}원`, icon: TrendingUp },
-                { label: "최저 전세보증금", value: `${formatAmount(String(rentSummary.min))}원`, icon: TrendingDown },
+                { label: `${tab} 거래 건수`, value: `${pcSummary.count}건`, icon: List },
+                { label: `평균 ${pcSummary.unit}`, value: `${formatAmount(String(pcSummary.avg))}원`, icon: tab === "매매" ? BarChart3 : Wallet },
+                { label: `최고 ${pcSummary.unit}`, value: `${formatAmount(String(pcSummary.max))}원`, icon: TrendingUp },
+                { label: `최저 ${pcSummary.unit}`, value: `${formatAmount(String(pcSummary.min))}원`, icon: TrendingDown },
               ].map((s) => (
                 <div key={s.label} className="bg-white rounded-sm border border-border p-5">
                   <div className="flex items-center gap-2 mb-2">
@@ -349,9 +380,44 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
                 </div>
               ))}
             </div>
-          ) : (
+          )}
+        </div>
+
+        {/* 전광판 — 모바일 전용 (범례 종류에 반응) */}
+        <div className="lg:hidden mb-6">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-3">
+            <Building2 className="w-4 h-4 text-gold flex-shrink-0" />
+            <h2 className="text-base font-bold text-navy">
+              {complex === "전체" ? "옥정동 전체 단지" : complex}
+            </h2>
+            <span className="text-xs px-2 py-0.5 rounded-sm bg-cream border border-border text-text-muted font-medium">
+              {sizeRange === "전체" ? "전체 면적" : sizeRange}
+            </span>
+            <span className="text-xs text-text-muted font-medium">
+              · {mobileSummary.kind} 기준 ({displayYmd})
+            </span>
+          </div>
+
+          {mobileSummary.count === 0 ? (
             <div className="bg-white rounded-sm border border-border p-6 text-center text-sm text-text-muted">
-              해당 조건의 전세 내역이 없습니다.
+              해당 조건의 {mobileSummary.kind} 내역이 없습니다.
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: `${mobileSummary.kind} 거래 건수`, value: `${mobileSummary.count}건`, icon: List },
+                { label: `평균 ${mobileSummary.unit}`, value: `${formatAmount(String(mobileSummary.avg))}원`, icon: mobileSummary.kind === "매매" ? BarChart3 : Wallet },
+                { label: `최고 ${mobileSummary.unit}`, value: `${formatAmount(String(mobileSummary.max))}원`, icon: TrendingUp },
+                { label: `최저 ${mobileSummary.unit}`, value: `${formatAmount(String(mobileSummary.min))}원`, icon: TrendingDown },
+              ].map((s) => (
+                <div key={s.label} className="bg-white rounded-sm border border-border p-4">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <s.icon className="w-3.5 h-3.5 text-gold flex-shrink-0" />
+                    <span className="text-[11px] text-text-muted">{s.label}</span>
+                  </div>
+                  <div className="text-lg font-bold text-navy">{s.value}</div>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -366,7 +432,7 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
 
         {/* Table (PC 전용) */}
         <div className="hidden lg:block bg-white rounded-sm border border-border mb-6">
-          {tab === "trade" ? (
+          {tab === "매매" ? (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -385,14 +451,14 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-light">
-                  {filteredTrades.length === 0 ? (
+                  {displayedTrades.length === 0 ? (
                     <tr>
                       <td colSpan={showAptName ? 6 : 5} className="px-4 py-10 text-center text-text-muted text-sm">
                         해당 조건의 거래 내역이 없습니다.
                       </td>
                     </tr>
                   ) : (
-                    filteredTrades.map((t, i) => (
+                    displayedTrades.map((t, i) => (
                       <tr key={i} className="hover:bg-cream/40 transition-colors">
                         <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
                           <span className="text-xs font-bold px-2 py-0.5 rounded-sm text-white bg-gold">
@@ -441,14 +507,14 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-light">
-                  {filteredRents.length === 0 ? (
+                  {displayedRentsForTab.length === 0 ? (
                     <tr>
                       <td colSpan={showAptName ? 8 : 7} className="px-4 py-10 text-center text-text-muted text-sm">
-                        해당 조건의 전월세 내역이 없습니다.
+                        해당 조건의 {tab} 내역이 없습니다.
                       </td>
                     </tr>
                   ) : (
-                    filteredRents.map((r, i) => {
+                    displayedRentsForTab.map((r, i) => {
                       const isJeonse = !r.monthlyRent || r.monthlyRent === "0";
                       return (
                         <tr key={i} className="hover:bg-cream/40 transition-colors">
@@ -588,6 +654,22 @@ export default function MarketClient({ currentTrades, prevTrades, rentData, curr
             </div>
           )}
         </div>
+
+        {/* 과거 거래 더보기 (리스트만 6개월 전체로 펼침) */}
+        {hasMore && (
+          <div className="flex justify-center mb-8">
+            <button
+              type="button"
+              onClick={() => setShowMore((v) => !v)}
+              className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-navy text-navy text-sm font-bold rounded-sm hover:bg-navy hover:text-white transition-colors duration-200 cursor-pointer"
+            >
+              {showMore ? "최근 거래만 보기" : "과거 거래 더보기 (최근 6개월)"}
+              <ChevronDown
+                className={`w-4 h-4 transition-transform duration-200 ${showMore ? "rotate-180" : ""}`}
+              />
+            </button>
+          </div>
+        )}
 
         <p className="text-xs text-text-light text-center">
           * 본 자료는 국토교통부 실거래가 공개시스템 데이터를 기반으로 합니다.
