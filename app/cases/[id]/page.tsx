@@ -27,7 +27,9 @@ export async function generateMetadata({
   return {
     title: `${c.title} | 알파고 공인중개사사무소`,
     description: c.summary,
-    keywords: `옥정신도시, 옥정동 아파트, ${c.tag}, ${c.complex}, 부동산 사례, 공인중개사`,
+    keywords:
+      c.keywords ??
+      `옥정신도시, 옥정동 아파트, ${c.tag}, ${c.complex}, 부동산 사례, 공인중개사`,
     alternates: { canonical: `${SITE_URL}/cases/${c.id}` },
     openGraph: {
       type: "article",
@@ -77,7 +79,9 @@ export default async function CaseDetailPage({
     articleBody: c.content.replace(/\n+/g, " ").trim(),
     inLanguage: "ko",
     datePublished: toISODate(c.date),
-    keywords: ["옥정신도시", "옥정동 아파트", c.tag, c.complex, "부동산 사례"].join(", "),
+    keywords:
+      c.keywords ??
+      ["옥정신도시", "옥정동 아파트", c.tag, c.complex, "부동산 사례"].join(", "),
     author: { "@type": "Organization", name: SITE_NAME },
     publisher: {
       "@type": "RealEstateAgent",
