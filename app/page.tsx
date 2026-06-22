@@ -340,9 +340,10 @@ export default async function HomePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {marketHighlights.map((item) => (
-              <div
+              <Link
                 key={item.complex}
-                className="bg-white rounded-sm border border-border p-5 hover:border-gold hover:shadow-[4px_4px_0_0_#161616] transition-all duration-200 cursor-pointer group"
+                href={`/market?complex=${encodeURIComponent(item.complex)}`}
+                className="block bg-white rounded-sm border border-border p-5 hover:border-gold hover:shadow-[4px_4px_0_0_#161616] transition-all duration-200 cursor-pointer group"
               >
                 <div className="flex items-center justify-between mb-3">
                   <span
@@ -362,10 +363,13 @@ export default async function HomePage() {
                   {item.complex}
                 </p>
                 <div className="text-xl font-black text-navy">{item.price}</div>
-                <div className="text-xs font-medium mt-1 text-text-muted">
-                  {item.dateLabel}
+                <div className="text-xs font-medium mt-1 text-text-muted flex items-center justify-between">
+                  <span>{item.dateLabel}</span>
+                  <span className="text-gold opacity-0 group-hover:opacity-100 transition-opacity font-bold">
+                    실거래가 →
+                  </span>
                 </div>
-              </div>
+              </Link>
             ))}
             {marketHighlights.length === 0 && (
               <div className="col-span-full py-10 text-center text-text-muted text-sm">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { TradeItem, RentItem, formatAmount } from "@/lib/molit";
 import { TrendingUp, TrendingDown, BarChart3, List, Building2, Ruler, Flame, Wallet, ArrowLeftRight, Pointer, ChevronDown } from "lucide-react";
 import HoverFillButton from "@/components/ui/hover-fill-button";
@@ -97,9 +98,19 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
   const [tapHintDone, setTapHintDone] = useState(false);
   // 과거 거래 더보기 (리스트만 과거 월까지 펼침. 전광판은 최신월 고정)
   const [showMore, setShowMore] = useState(false);
-  // 첫 화면 기본 단지: 옥정센트럴파크푸르지오 (있으면 그 이름, 없으면 전체)
+  // 홈에서 카드 클릭 시 ?complex=단지명 으로 들어오면 그 단지 선택
+  const searchParams = useSearchParams();
   const [complex, setComplex] = useState(() => {
-    const match = [...trades, ...rents].find(
+    const all = [...trades, ...rents];
+    const fromUrl = searchParams.get("complex");
+    if (fromUrl) {
+      const m = all.find(
+        (d) => d.aptNm === fromUrl || normalizeName(d.aptNm) === normalizeName(fromUrl)
+      );
+      if (m) return m.aptNm;
+    }
+    // 기본 단지: 옥정센트럴파크푸르지오 (있으면 그 이름, 없으면 전체)
+    const match = all.find(
       (d) => normalizeName(d.aptNm) === normalizeName("옥정센트럴파크푸르지오")
     );
     return match ? match.aptNm : "전체";

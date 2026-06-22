@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import {
   fetchAptTradeRange,
   fetchAptRentRange,
@@ -5,6 +6,7 @@ import {
   fetchLatestAptRent,
 } from "@/lib/molit";
 import MarketClient from "./MarketClient";
+import MarketLoading from "./loading";
 
 export const metadata = {
   title: "아파트 시세 | 알파고 공인중개사사무소",
@@ -41,11 +43,13 @@ export default async function MarketPage() {
   });
 
   return (
-    <MarketClient
-      trades={trades}
-      rents={rents}
-      currentYmd={currentYmd}
-      accessDate={accessDate}
-    />
+    <Suspense fallback={<MarketLoading />}>
+      <MarketClient
+        trades={trades}
+        rents={rents}
+        currentYmd={currentYmd}
+        accessDate={accessDate}
+      />
+    </Suspense>
   );
 }
