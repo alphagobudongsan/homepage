@@ -109,7 +109,7 @@ export default function Footer() {
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5 text-xs text-white/45 leading-relaxed">
             <div>
-              <p className="text-white/75 font-semibold mb-1">알파고공인중개사사무소</p>
+              <p className="text-white/75 font-semibold mb-1">알파고031-864-4222공인중개사사무소</p>
               <p>대표 강은주 · 등록번호 41630-2021-00094</p>
               <p>경기도 양주시 옥정로5길 35, 상가101호</p>
               <p>전화 031-864-4222</p>
