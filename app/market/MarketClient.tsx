@@ -45,11 +45,22 @@ function sizeInRange(ar: string, range: string): boolean {
 }
 
 type DealKind = "매매" | "전세" | "월세";
+type TabKind = "전체" | DealKind;
 
-// 유형별 요약 (매매=거래가 / 전세·월세=보증금)
+// 유형별 색상 (범례·배지 공통)
+const KIND_COLOR: Record<TabKind, string> = {
+  전체: "bg-navy",
+  매매: "bg-gold",
+  전세: "bg-blue-600",
+  월세: "bg-green-600",
+};
+
+// 유형별 요약 (매매=거래가 / 전세·월세=보증금). 전세·월세는 신규/갱신 건수도 집계
 function computeSummary(kind: DealKind, trades: TradeItem[], rents: RentItem[]) {
   let amounts: number[] = [];
   let unit = "거래가";
+  let newCount = 0;
+  let renewCount = 0;
   if (kind === "매매") {
     amounts = trades.map((t) => parseInt(t.dealAmount.replace(/,/g, ""), 10));
     unit = "거래가";
@@ -60,14 +71,26 @@ function computeSummary(kind: DealKind, trades: TradeItem[], rents: RentItem[]) 
     });
     amounts = arr.map((r) => parseInt(r.deposit.replace(/,/g, ""), 10));
     unit = kind === "전세" ? "전세보증금" : "월세보증금";
+    renewCount = arr.filter((r) => r.contractType === "갱신").length;
+    newCount = arr.length - renewCount;
   }
-  if (amounts.length === 0) return { kind, unit, count: 0, avg: 0, max: 0, min: 0 };
+  if (amounts.length === 0)
+    return { kind, unit, count: 0, avg: 0, max: 0, min: 0, newCount: 0, renewCount: 0 };
   const avg = Math.round(amounts.reduce((a, b) => a + b, 0) / amounts.length);
-  return { kind, unit, count: amounts.length, avg, max: Math.max(...amounts), min: Math.min(...amounts) };
+  return {
+    kind,
+    unit,
+    count: amounts.length,
+    avg,
+    max: Math.max(...amounts),
+    min: Math.min(...amounts),
+    newCount,
+    renewCount,
+  };
 }
 
 export default function MarketClient({ trades, rents, currentYmd, accessDate }: Props) {
-  const [tab, setTab] = useState<DealKind>("매매");
+  const [tab, setTab] = useState<TabKind>("전체");
   // 모바일 통합 리스트 종류 필터 (범례 클릭)
   const [mobileKind, setMobileKind] = useState<"전체" | "매매" | "전세" | "월세">("전체");
   // 단지 드롭다운 '탭하세요' 손가락 힌트 (한 번 누르면 사라짐)
@@ -96,7 +119,8 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
 
   // 단지 드롭다운 목록: 6개월 전체 데이터 기준
   const complexOptions = useMemo(() => {
-    const source = tab === "매매" ? trades : rents;
+    const source =
+      tab === "매매" ? trades : tab === "전체" ? [...trades, ...rents] : rents;
     const names = Array.from(new Set(source.map((d) => d.aptNm))).sort();
     return ["전체", ...names];
   }, [tab, trades, rents]);
@@ -155,9 +179,9 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
     allFilteredTrades.length > filteredTrades.length ||
     allFilteredRents.length > filteredRents.length;
 
-  // 유형별 요약 (매매=거래가 / 전세·월세=보증금)
+  // 유형별 요약 (매매=거래가 / 전세·월세=보증금). 전체는 건수만 따로 사용
   const pcSummary = useMemo(
-    () => computeSummary(tab, filteredTrades, filteredRents),
+    () => computeSummary(tab === "전체" ? "매매" : tab, filteredTrades, filteredRents),
     [tab, filteredTrades, filteredRents]
   );
 
@@ -166,6 +190,14 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
     () => computeSummary(mobileKind === "전체" ? "매매" : mobileKind, filteredTrades, filteredRents),
     [mobileKind, filteredTrades, filteredRents]
   );
+
+  // '전체' 전광판용 유형별 건수 (최신 거래월) — PC·모바일 공용
+  const counts = useMemo(() => {
+    const maemae = filteredTrades.length;
+    const jeonse = filteredRents.filter((r) => !r.monthlyRent || r.monthlyRent === "0").length;
+    const wolse = filteredRents.length - jeonse;
+    return { total: maemae + jeonse + wolse, maemae, jeonse, wolse };
+  }, [filteredTrades, filteredRents]);
 
   const displayYmd = `${currentYmd.slice(0, 4)}년 ${parseInt(currentYmd.slice(4), 10)}월`;
 
@@ -246,9 +278,9 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Tabs + Filters */}
         <div className="bg-white rounded-sm border border-border mb-6">
-          {/* 탭: PC 전용 (매매/전세/월세). 모바일은 통합 리스트로 대체 */}
+          {/* 탭: PC 전용 (전체/매매/전세/월세). 모바일은 통합 리스트로 대체 */}
           <div className="hidden lg:flex items-center gap-3 p-4 border-b border-border">
-            {(["매매", "전세", "월세"] as DealKind[]).map((k) => (
+            {(["전체", "매매", "전세", "월세"] as TabKind[]).map((k) => (
               <HoverFillButton
                 key={k}
                 active={tab === k}
@@ -357,19 +389,66 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
             <span className="text-xs text-text-light">
               · {tab} 기준 ({displayYmd})
             </span>
+
+            {/* 색상 범례 (클릭 = 탭과 연동) */}
+            <div className="flex items-center gap-1.5 ml-auto">
+              {(["전체", "매매", "전세", "월세"] as TabKind[]).map((k) => {
+                const on = tab === k;
+                return (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setTab(k)}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border transition-colors cursor-pointer ${
+                      on ? `${KIND_COLOR[k]} text-white border-transparent` : "bg-white text-navy border-border hover:border-navy"
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${on ? "bg-white" : KIND_COLOR[k]}`} />
+                    {k}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {pcSummary.count === 0 ? (
+          {tab === "전체" ? (
+            // 전체: 전체 건수 + 유형별 건수
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { label: "전체 거래 건수", value: `${counts.total}건`, dot: "", icon: List },
+                { label: "매매", value: `${counts.maemae}건`, dot: KIND_COLOR.매매, icon: null },
+                { label: "전세", value: `${counts.jeonse}건`, dot: KIND_COLOR.전세, icon: null },
+                { label: "월세", value: `${counts.wolse}건`, dot: KIND_COLOR.월세, icon: null },
+              ].map((s) => (
+                <div key={s.label} className="bg-white rounded-sm border border-border p-5">
+                  <div className="flex items-center gap-2 mb-2">
+                    {s.icon ? (
+                      <s.icon className="w-4 h-4 text-gold" />
+                    ) : (
+                      <span className={`w-3 h-3 rounded-full ${s.dot}`} />
+                    )}
+                    <span className="text-xs text-text-muted">{s.label}</span>
+                  </div>
+                  <div className="text-xl font-bold text-navy">{s.value}</div>
+                </div>
+              ))}
+            </div>
+          ) : pcSummary.count === 0 ? (
             <div className="bg-white rounded-sm border border-border p-6 text-center text-sm text-text-muted">
               해당 조건의 {tab} 내역이 없습니다.
             </div>
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { label: `${tab} 거래 건수`, value: `${pcSummary.count}건`, icon: List },
-                { label: `평균 ${pcSummary.unit}`, value: `${formatAmount(String(pcSummary.avg))}원`, icon: tab === "매매" ? BarChart3 : Wallet },
-                { label: `최고 ${pcSummary.unit}`, value: `${formatAmount(String(pcSummary.max))}원`, icon: TrendingUp },
-                { label: `최저 ${pcSummary.unit}`, value: `${formatAmount(String(pcSummary.min))}원`, icon: TrendingDown },
+                {
+                  label: `${tab} 거래 건수`,
+                  value: `${pcSummary.count}건`,
+                  newRenew: tab !== "매매",
+                  icon: List,
+                },
+                { label: `평균 ${pcSummary.unit}`, value: `${formatAmount(String(pcSummary.avg))}원`, newRenew: false, icon: tab === "매매" ? BarChart3 : Wallet },
+                { label: `최고 ${pcSummary.unit}`, value: `${formatAmount(String(pcSummary.max))}원`, newRenew: false, icon: TrendingUp },
+                { label: `최저 ${pcSummary.unit}`, value: `${formatAmount(String(pcSummary.min))}원`, newRenew: false, icon: TrendingDown },
               ].map((s) => (
                 <div key={s.label} className="bg-white rounded-sm border border-border p-5">
                   <div className="flex items-center gap-2 mb-2">
@@ -377,6 +456,13 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
                     <span className="text-xs text-text-muted">{s.label}</span>
                   </div>
                   <div className="text-xl font-bold text-navy">{s.value}</div>
+                  {s.newRenew && (
+                    <div className="text-xs font-bold mt-1">
+                      <span className="text-blue-600">신규 {pcSummary.newCount}</span>
+                      <span className="text-text-light mx-1">·</span>
+                      <span className="text-gold-dark">갱신 {pcSummary.renewCount}</span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -394,21 +480,48 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
               {sizeRange === "전체" ? "전체 면적" : sizeRange}
             </span>
             <span className="text-xs text-text-muted font-medium">
-              · {mobileSummary.kind} 기준 ({displayYmd})
+              · {mobileKind} 기준 ({displayYmd})
             </span>
           </div>
 
-          {mobileSummary.count === 0 ? (
+          {mobileKind === "전체" ? (
+            // 전체: 전체 건수 + 유형별 건수
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: "전체 거래 건수", value: `${counts.total}건`, dot: "", icon: List },
+                { label: "매매", value: `${counts.maemae}건`, dot: KIND_COLOR.매매, icon: null },
+                { label: "전세", value: `${counts.jeonse}건`, dot: KIND_COLOR.전세, icon: null },
+                { label: "월세", value: `${counts.wolse}건`, dot: KIND_COLOR.월세, icon: null },
+              ].map((s) => (
+                <div key={s.label} className="bg-white rounded-sm border border-border p-4">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    {s.icon ? (
+                      <s.icon className="w-3.5 h-3.5 text-gold flex-shrink-0" />
+                    ) : (
+                      <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${s.dot}`} />
+                    )}
+                    <span className="text-[11px] text-text-muted">{s.label}</span>
+                  </div>
+                  <div className="text-lg font-bold text-navy">{s.value}</div>
+                </div>
+              ))}
+            </div>
+          ) : mobileSummary.count === 0 ? (
             <div className="bg-white rounded-sm border border-border p-6 text-center text-sm text-text-muted">
-              해당 조건의 {mobileSummary.kind} 내역이 없습니다.
+              해당 조건의 {mobileKind} 내역이 없습니다.
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: `${mobileSummary.kind} 거래 건수`, value: `${mobileSummary.count}건`, icon: List },
-                { label: `평균 ${mobileSummary.unit}`, value: `${formatAmount(String(mobileSummary.avg))}원`, icon: mobileSummary.kind === "매매" ? BarChart3 : Wallet },
-                { label: `최고 ${mobileSummary.unit}`, value: `${formatAmount(String(mobileSummary.max))}원`, icon: TrendingUp },
-                { label: `최저 ${mobileSummary.unit}`, value: `${formatAmount(String(mobileSummary.min))}원`, icon: TrendingDown },
+                {
+                  label: `${mobileSummary.kind} 거래 건수`,
+                  value: `${mobileSummary.count}건`,
+                  newRenew: mobileSummary.kind !== "매매",
+                  icon: List,
+                },
+                { label: `평균 ${mobileSummary.unit}`, value: `${formatAmount(String(mobileSummary.avg))}원`, newRenew: false, icon: mobileSummary.kind === "매매" ? BarChart3 : Wallet },
+                { label: `최고 ${mobileSummary.unit}`, value: `${formatAmount(String(mobileSummary.max))}원`, newRenew: false, icon: TrendingUp },
+                { label: `최저 ${mobileSummary.unit}`, value: `${formatAmount(String(mobileSummary.min))}원`, newRenew: false, icon: TrendingDown },
               ].map((s) => (
                 <div key={s.label} className="bg-white rounded-sm border border-border p-4">
                   <div className="flex items-center gap-1.5 mb-1.5">
@@ -416,6 +529,13 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
                     <span className="text-[11px] text-text-muted">{s.label}</span>
                   </div>
                   <div className="text-lg font-bold text-navy">{s.value}</div>
+                  {s.newRenew && (
+                    <div className="text-xs font-bold mt-1">
+                      <span className="text-blue-600">신규 {mobileSummary.newCount}</span>
+                      <span className="text-text-light mx-1">·</span>
+                      <span className="text-gold-dark">갱신 {mobileSummary.renewCount}</span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -432,7 +552,63 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
 
         {/* Table (PC 전용) */}
         <div className="hidden lg:block bg-white rounded-sm border border-border mb-6">
-          {tab === "매매" ? (
+          {tab === "전체" ? (
+            // 전체: 매매+전세+월세 통합 표 (최신순)
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-cream/50">
+                    {(showAptName
+                      ? ["유형", "아파트명", "전용면적", "층", "거래일", "금액"]
+                      : ["유형", "전용면적", "층", "거래일", "금액"]
+                    ).map((h) => (
+                      <th
+                        key={h}
+                        className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wide whitespace-nowrap"
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-light">
+                  {mobileDeals.length === 0 ? (
+                    <tr>
+                      <td colSpan={showAptName ? 6 : 5} className="px-4 py-10 text-center text-text-muted text-sm">
+                        해당 조건의 거래 내역이 없습니다.
+                      </td>
+                    </tr>
+                  ) : (
+                    mobileDeals.map((d, i) => (
+                      <tr key={i} className="hover:bg-cream/40 transition-colors">
+                        <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-sm text-white ${KIND_COLOR[d.kind]}`}>
+                            {d.kind}
+                          </span>
+                        </td>
+                        {showAptName && (
+                          <td className="px-3 sm:px-4 py-3 text-sm font-medium text-navy whitespace-nowrap">
+                            {d.aptNm}
+                          </td>
+                        )}
+                        <td className="px-3 sm:px-4 py-3 text-sm text-text whitespace-nowrap">{d.area}</td>
+                        <td className="px-3 sm:px-4 py-3 text-sm text-text whitespace-nowrap">{d.floor}</td>
+                        <td className="px-3 sm:px-4 py-3 text-sm text-text-muted whitespace-nowrap">{d.date}</td>
+                        <td className="px-3 sm:px-4 py-3 text-sm font-bold text-navy whitespace-nowrap">
+                          {d.price}
+                          {d.isRenew && (
+                            <span className="ml-1.5 align-middle text-[10px] font-semibold px-1.5 py-0.5 rounded-sm bg-gold/10 text-gold-dark">
+                              갱신
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : tab === "매매" ? (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
