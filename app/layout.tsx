@@ -7,12 +7,12 @@ import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "알파고 공인중개사사무소 | AI가 추천하는 옥정동부동산",
+  title: "알파고 공인중개사사무소 | AI가 추천하는 옥정신도시부동산",
   description:
     "경기도 양주시 옥정동 전문 공인중개사 2인. 국토부 실거래 데이터로 아파트 시세, 전월세, 단지 정보를 한 곳에서.",
   keywords: "옥정동, 양주시, 아파트, 부동산, 공인중개사, 실거래가, 전세, 월세",
   openGraph: {
-    title: "알파고 공인중개사사무소 | AI가 추천하는 옥정동부동산",
+    title: "알파고 공인중개사사무소 | AI가 추천하는 옥정신도시부동산",
     description:
       "옥정신도시 아파트 전문 공인중개사 2인. 국토부 실거래 데이터로 시세·전월세·단지정보를 한 곳에서.",
     siteName: "알파고 공인중개사사무소",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "알파고 공인중개사사무소 | AI가 추천하는 옥정동부동산",
+    title: "알파고 공인중개사사무소 | AI가 추천하는 옥정신도시부동산",
     description:
       "옥정신도시 아파트 전문 공인중개사 2인. 국토부 실거래 데이터로 시세·전월세·단지정보를 한 곳에서.",
   },
@@ -38,7 +38,7 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "RealEstateAgent",
   name: "알파고 공인중개사사무소",
-  alternateName: "AI가 추천하는 옥정동부동산",
+  alternateName: "AI가 추천하는 옥정신도시부동산",
   url: SITE_URL,
   image: `${SITE_URL}/opengraph-image.png`,
   description:

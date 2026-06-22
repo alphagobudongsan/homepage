@@ -242,7 +242,7 @@ export default async function HomePage() {
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 border border-white/20 rounded-sm mb-7 backdrop-blur-sm">
               <Sparkles className="w-3.5 h-3.5 text-gold-light" />
               <span className="text-white text-xs font-bold tracking-wider">
-                AI가 추천하는 옥정동부동산
+                AI가 추천하는 옥정신도시부동산
               </span>
             </div>
 

@@ -22,7 +22,7 @@ export default function Footer() {
               </div>
               <div className="flex flex-col leading-none">
                 <span className="text-[10px] text-gold-light tracking-[0.2em] uppercase font-light">
-                  AI가 추천하는 옥정동부동산
+                  AI가 추천하는 옥정신도시부동산
                 </span>
                 <span className="text-white font-semibold text-base">
                   알파고 공인중개사사무소

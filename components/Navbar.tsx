@@ -49,7 +49,7 @@ export default function Navbar() {
             </div>
             <div className="flex flex-col leading-tight">
               <span className="text-[11px] sm:text-xs text-gold-light tracking-[0.08em] font-semibold">
-                AI가 추천하는 옥정동부동산
+                AI가 추천하는 옥정신도시부동산
               </span>
               <span className="text-white font-bold text-base sm:text-lg tracking-tight">
                 알파고 공인중개사사무소
