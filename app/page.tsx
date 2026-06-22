@@ -26,7 +26,8 @@ import {
 } from "@/lib/molit";
 import FAQ from "@/components/FAQ";
 
-export const revalidate = 0;
+// 10분 캐시 (빠른 로딩 + 실시간 느낌)
+export const revalidate = 600;
 
 const heroFeatures = [
   {

@@ -11,7 +11,8 @@ export const metadata = {
   description: "경기도 양주시 옥정동 아파트 실거래가, 전세, 월세 현황을 확인하세요.",
 };
 
-export const revalidate = 0;
+// 10분 캐시 (손님마다 국토부 API를 호출하지 않고 10분에 한 번만 → 빠른 로딩 + 실시간 느낌)
+export const revalidate = 600;
 
 export default async function MarketPage() {
   // 최근 6개월 실거래 (전광판=최신월, 리스트=더보기로 과거까지)
