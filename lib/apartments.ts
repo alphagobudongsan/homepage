@@ -38,7 +38,9 @@ export interface AptSummary {
   dongs?: number;
   dealCount: number;      // 최근 기간 거래 건수 (매매+전월세)
   tradeCount: number;     // 매매 건수
-  rentCount: number;      // 전월세 건수
+  rentCount: number;      // 전월세 건수 (전세+월세)
+  jeonseCount: number;    // 전세 건수
+  wolseCount: number;     // 월세 건수
   latestPrice?: number;   // 최근 매매가 (만원)
 }
 
@@ -62,6 +64,8 @@ export function aggregateApartments(
         dealCount: 0,
         tradeCount: 0,
         rentCount: 0,
+        jeonseCount: 0,
+        wolseCount: 0,
       });
     }
     return map.get(name)!;
@@ -90,6 +94,9 @@ export function aggregateApartments(
     const a = ensure(r.aptNm, "", "");
     a.rentCount += 1;
     a.dealCount += 1;
+    const monthly = parseInt((r.monthlyRent || "0").replace(/,/g, ""), 10) || 0;
+    if (monthly > 0) a.wolseCount += 1;
+    else a.jeonseCount += 1;
   }
 
   return Array.from(map.values());

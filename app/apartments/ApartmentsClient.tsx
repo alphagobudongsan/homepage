@@ -122,10 +122,22 @@ export default function ApartmentsClient({
                           <span>{apt.dongs}개동</span>
                         </>
                       )}
-                      <span className="text-border">|</span>
-                      <span className="text-gold-dark font-semibold">
+                    </div>
+                    {/* 최근 1년 거래: 전체/매매/전세/월세 분리 */}
+                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 mt-1.5 text-xs">
+                      <span className="font-bold text-navy">
                         최근 거래 {apt.dealCount}건
                       </span>
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-gold/10 text-gold-dark font-semibold">
+                        매매 {apt.tradeCount}
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-blue-600/10 text-blue-700 font-semibold">
+                        전세 {apt.jeonseCount}
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-green-600/10 text-green-700 font-semibold">
+                        월세 {apt.wolseCount}
+                      </span>
+                      <span className="text-text-light">(최근 1년 거래)</span>
                     </div>
                     <div className="flex items-center gap-1 mt-1 text-xs text-text-light">
                       <MapPin className="w-3 h-3 flex-shrink-0" />

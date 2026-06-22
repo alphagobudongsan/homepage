@@ -8,7 +8,8 @@ export const metadata = {
   description: "경기도 양주시 옥정동 아파트 단지별 실거래 정보를 확인하세요.",
 };
 
-export const revalidate = 3600;
+// 6시간 캐시 (단지 정보·세대수는 자주 바뀌지 않아 길게 — 갱신 부담↓, 빠른 로딩)
+export const revalidate = 21600;
 
 export default async function ApartmentsPage() {
   const [trades, rents, kaptIndex] = await Promise.all([

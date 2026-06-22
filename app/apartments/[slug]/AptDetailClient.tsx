@@ -17,16 +17,23 @@ interface Props {
   trend: MonthlyPoint[];
 }
 
+// 실거래 유형 색상 — 사이트 표준 (매매=금색 / 전세=파랑 / 월세=초록)
 const typeColor: Record<string, string> = {
-  매매: "text-navy",
-  전세: "text-teal",
-  월세: "text-gold-dark",
+  매매: "text-gold-dark",
+  전세: "text-blue-700",
+  월세: "text-green-700",
 };
 
 const typeBg: Record<string, string> = {
-  매매: "bg-navy/5 text-navy",
-  전세: "bg-teal/10 text-teal",
-  월세: "bg-gold/10 text-gold-dark",
+  매매: "bg-gold text-white",
+  전세: "bg-blue-600 text-white",
+  월세: "bg-green-600 text-white",
+};
+
+const typeDot: Record<string, string> = {
+  매매: "bg-gold",
+  전세: "bg-blue-600",
+  월세: "bg-green-600",
 };
 
 export default function AptDetailClient({
@@ -149,30 +156,39 @@ export default function AptDetailClient({
         {/* Summary cards */}
         <div className="grid grid-cols-3 gap-3 mb-5">
           <div className="bg-white rounded-sm border border-border p-4">
-            <div className="text-xs text-text-muted mb-1">{ymLabel} 매매</div>
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="w-2 h-2 rounded-full bg-gold flex-shrink-0" />
+              <span className="text-xs text-text-muted">{ymLabel} 매매</span>
+            </div>
             <div className="text-lg font-bold text-navy">
               {summary.trade.count > 0
                 ? `${formatAmount(String(summary.trade.avg))}`
                 : "-"}
             </div>
-            <div className="text-xs text-text-light mt-0.5">
+            <div className="text-xs font-bold text-gold-dark mt-0.5">
               {summary.trade.count}건 거래
             </div>
           </div>
           <div className="bg-white rounded-sm border border-border p-4">
-            <div className="text-xs text-text-muted mb-1">{ymLabel} 전세</div>
-            <div className="text-lg font-bold text-teal">
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="w-2 h-2 rounded-full bg-blue-600 flex-shrink-0" />
+              <span className="text-xs text-text-muted">{ymLabel} 전세</span>
+            </div>
+            <div className="text-lg font-bold text-navy">
               {summary.jeonse.count > 0
                 ? `${formatAmount(String(summary.jeonse.avg))}`
                 : "-"}
             </div>
-            <div className="text-xs text-text-light mt-0.5">
+            <div className="text-xs font-bold text-blue-700 mt-0.5">
               {summary.jeonse.count}건 거래
             </div>
           </div>
           <div className="bg-white rounded-sm border border-border p-4">
-            <div className="text-xs text-text-muted mb-1">{ymLabel} 월세</div>
-            <div className="text-lg font-bold text-gold-dark">
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="w-2 h-2 rounded-full bg-green-600 flex-shrink-0" />
+              <span className="text-xs text-text-muted">{ymLabel} 월세</span>
+            </div>
+            <div className="text-lg font-bold text-green-700">
               {summary.wolse.count}건
             </div>
             <div className="text-xs text-text-light mt-0.5">최근 거래</div>
@@ -183,7 +199,7 @@ export default function AptDetailClient({
         <div className="bg-white rounded-sm border border-border p-6 mb-5">
           <div className="flex items-center justify-between mb-1">
             <h2 className="text-base font-bold text-navy">시세 추이 (VS 가격비교)</h2>
-            <span className="text-xs text-text-light">최근 24개월</span>
+            <span className="text-xs text-text-light">최근 6개월</span>
           </div>
           <p className="text-xs text-text-muted mb-5">
             월별 매매·전세 평균가와 거래량 (국토교통부 실거래 기준)
@@ -204,19 +220,35 @@ export default function AptDetailClient({
 
             {/* Deal kind filter */}
             <div className="flex flex-wrap gap-2 mb-3">
-              {(["전체", "매매", "전세", "월세"] as const).map((k) => (
-                <button
-                  key={k}
-                  onClick={() => setDealKind(k)}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-sm border transition-colors duration-150 cursor-pointer ${
-                    dealKind === k
-                      ? "bg-navy text-white border-navy"
-                      : "border-border text-text-muted hover:border-navy hover:text-navy"
-                  }`}
-                >
-                  {k}
-                </button>
-              ))}
+              {(["전체", "매매", "전세", "월세"] as const).map((k) => {
+                const active = dealKind === k;
+                const activeColor =
+                  k === "매매"
+                    ? "bg-gold text-white border-gold"
+                    : k === "전세"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : k === "월세"
+                    ? "bg-green-600 text-white border-green-600"
+                    : "bg-navy text-white border-navy";
+                return (
+                  <button
+                    key={k}
+                    onClick={() => setDealKind(k)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-sm border transition-colors duration-150 cursor-pointer ${
+                      active
+                        ? activeColor
+                        : "border-border text-text-muted hover:border-navy hover:text-navy"
+                    }`}
+                  >
+                    {k !== "전체" && (
+                      <span
+                        className={`w-2 h-2 rounded-full ${active ? "bg-white" : typeDot[k]}`}
+                      />
+                    )}
+                    {k}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Type filter */}
@@ -292,7 +324,7 @@ export default function AptDetailClient({
                         <span className={`text-sm font-bold ${typeColor[d.type]}`}>
                           {formatAmount(String(d.amount))}
                           {d.type === "월세" && d.monthly > 0 && (
-                            <span className="text-gold-dark">
+                            <span className="text-green-700">
                               {" "}/ {d.monthly}만
                             </span>
                           )}
