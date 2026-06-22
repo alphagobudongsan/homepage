@@ -130,6 +130,7 @@ const areaFeatures = [
 
 const agents = [
   {
+    id: "kang-eunju",
     name: "강은주",
     title: "공인중개사",
     specialty: "아파트 매매·전세·월세 입지 분석",
@@ -139,6 +140,7 @@ const agents = [
     reviews: 184,
   },
   {
+    id: "kwon-jeonguk",
     name: "권정욱",
     title: "공인중개사",
     specialty: "상가·공장·창고·아파트 매매·전세·월세 권리 분석",
@@ -451,9 +453,11 @@ export default async function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {agents.map((agent) => (
-              <div
-                key={agent.name}
-                className="bg-white border border-border p-7 hover:border-gold hover:shadow-[6px_6px_0_0_#161616] transition-all duration-200 group"
+              <Link
+                key={agent.id}
+                href={`/agents#${agent.id}`}
+                aria-label={`${agent.name} 공인중개사 소개 보기`}
+                className="block bg-white border border-border p-7 hover:border-gold hover:shadow-[6px_6px_0_0_#161616] transition-all duration-200 cursor-pointer group"
               >
                 <div className="flex items-start gap-5">
                   <div className="w-20 h-20 flex-shrink-0 overflow-hidden">
@@ -486,15 +490,14 @@ export default async function HomePage() {
                       </span>
                     </div>
                   </div>
-                  <Link
-                    href="/agents"
-                    className="self-center w-10 h-10 flex items-center justify-center border-2 border-navy group-hover:bg-gold group-hover:border-gold transition-colors duration-200 cursor-pointer flex-shrink-0"
-                    aria-label={`${agent.name} 중개사 보기`}
+                  <span
+                    className="self-center w-10 h-10 flex items-center justify-center border-2 border-navy group-hover:bg-gold group-hover:border-gold transition-colors duration-200 flex-shrink-0"
+                    aria-hidden="true"
                   >
                     <ChevronRight className="w-5 h-5 text-navy group-hover:text-white transition-colors" />
-                  </Link>
+                  </span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
