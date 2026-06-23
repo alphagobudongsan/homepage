@@ -17,10 +17,10 @@ export const metadata = {
 export const revalidate = 600;
 
 export default async function MarketPage() {
-  // 최근 6개월 실거래 (전광판=최신월, 리스트=더보기로 과거까지)
+  // 최근 12개월 실거래 (전광판=선택월, 리스트=더보기로 과거까지). 캐시되어 손님 지연 없음
   let [trades, rents] = await Promise.all([
-    fetchAptTradeRange("41630", 6),
-    fetchAptRentRange("41630", 6),
+    fetchAptTradeRange("41630", 12),
+    fetchAptRentRange("41630", 12),
   ]);
   // 데이터가 전혀 없으면(API 일시 오류) 목업 폴백
   if (trades.length === 0) trades = (await fetchLatestAptTrade("41630")).items;

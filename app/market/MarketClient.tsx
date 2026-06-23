@@ -100,6 +100,71 @@ function computeSummary(kind: DealKind, trades: TradeItem[], rents: RentItem[]) 
   };
 }
 
+// 전광판 거래월 선택기 — 년/월 각각 드롭다운. 불러온 데이터 안에서 즉시 전환
+function YmPicker({
+  ym,
+  options,
+  onChange,
+}: {
+  ym: string;
+  options: string[];
+  onChange: (v: string) => void;
+}) {
+  if (!ym || options.length === 0) return null;
+  const year = ym.slice(0, 4);
+  const month = parseInt(ym.slice(4), 10);
+  const years = Array.from(new Set(options.map((o) => o.slice(0, 4)))).sort().reverse();
+  const monthsInYear = options
+    .filter((o) => o.slice(0, 4) === year)
+    .map((o) => parseInt(o.slice(4), 10))
+    .sort((a, b) => b - a);
+  const selectCls =
+    "appearance-none bg-white border border-border rounded-sm pl-2 pr-5 py-0.5 text-xs font-bold text-navy cursor-pointer focus:outline-none focus:border-gold hover:border-gold transition-colors";
+
+  return (
+    <span className="inline-flex items-center gap-1">
+      <span className="relative inline-flex items-center">
+        <select
+          aria-label="거래 년도 선택"
+          value={year}
+          onChange={(e) => {
+            const ny = e.target.value;
+            const ms = options
+              .filter((o) => o.slice(0, 4) === ny)
+              .map((o) => o.slice(4))
+              .sort()
+              .reverse();
+            onChange(`${ny}${ms[0]}`);
+          }}
+          className={selectCls}
+        >
+          {years.map((y) => (
+            <option key={y} value={y}>
+              {y}년
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="w-3 h-3 text-text-muted absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none" />
+      </span>
+      <span className="relative inline-flex items-center">
+        <select
+          aria-label="거래 월 선택"
+          value={month}
+          onChange={(e) => onChange(`${year}${String(e.target.value).padStart(2, "0")}`)}
+          className={selectCls}
+        >
+          {monthsInYear.map((m) => (
+            <option key={m} value={m}>
+              {m}월
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="w-3 h-3 text-text-muted absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none" />
+      </span>
+    </span>
+  );
+}
+
 export default function MarketClient({ trades, rents, currentYmd, accessDate }: Props) {
   const [tab, setTab] = useState<TabKind>("전체");
   // 모바일 통합 리스트 종류 필터 (범례 클릭)
@@ -126,16 +191,30 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
     return match ? match.aptNm : "전체";
   });
   const [sizeRange, setSizeRange] = useState("전체");
+  // 전광판 기준 거래월 (드롭다운 선택, 기본=최신월). 불러온 데이터 안에서 즉시 전환(지연 없음)
+  const [selectedYm, setSelectedYm] = useState(currentYmd);
 
-  // 최신 거래월(전광판용) 데이터
   const ymOf = (y: string, m: string) => `${y}${m.padStart(2, "0")}`;
+
+  // 데이터에 존재하는 거래월 목록 (최신순)
+  const availableYms = useMemo(() => {
+    const set = new Set<string>();
+    trades.forEach((t) => set.add(ymOf(t.dealYear, t.dealMonth)));
+    rents.forEach((r) => set.add(ymOf(r.dealYear, r.dealMonth)));
+    return Array.from(set).filter(Boolean).sort().reverse();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trades, rents]);
+
+  // 선택한 거래월 데이터 (전광판용)
   const latestTrades = useMemo(
-    () => trades.filter((t) => ymOf(t.dealYear, t.dealMonth) === currentYmd),
-    [trades, currentYmd]
+    () => trades.filter((t) => ymOf(t.dealYear, t.dealMonth) === selectedYm),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [trades, selectedYm]
   );
   const latestRents = useMemo(
-    () => rents.filter((r) => ymOf(r.dealYear, r.dealMonth) === currentYmd),
-    [rents, currentYmd]
+    () => rents.filter((r) => ymOf(r.dealYear, r.dealMonth) === selectedYm),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rents, selectedYm]
   );
 
   // 단지 드롭다운 목록: 6개월 전체 데이터 기준
@@ -220,7 +299,9 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
     return { total: maemae + jeonse + wolse, maemae, jeonse, wolse };
   }, [filteredTrades, filteredRents]);
 
-  const displayYmd = `${currentYmd.slice(0, 4)}년 ${parseInt(currentYmd.slice(4), 10)}월`;
+  const displayYmd = selectedYm
+    ? `${selectedYm.slice(0, 4)}년 ${parseInt(selectedYm.slice(4), 10)}월`
+    : "";
 
   // 특정 단지를 선택하면 아파트명이 모두 같으므로 칼럼 숨김 (모바일 가독성)
   const showAptName = complex === "전체";
@@ -407,9 +488,8 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
             <span className="text-xs px-2 py-0.5 rounded-sm bg-cream border border-border text-text-muted font-medium">
               {sizeRange === "전체" ? "전체 면적" : sizeRange}
             </span>
-            <span className="text-xs text-text-light">
-              · {tab} 기준 ({displayYmd})
-            </span>
+            <span className="text-xs font-bold text-navy">· {tab} 기준</span>
+            <YmPicker ym={selectedYm} options={availableYms} onChange={setSelectedYm} />
 
             {/* 색상 범례 (클릭 = 탭과 연동) */}
             <div className="flex items-center gap-1.5 ml-auto">
@@ -500,9 +580,8 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
             <span className="text-xs px-2 py-0.5 rounded-sm bg-cream border border-border text-text-muted font-medium">
               {sizeRange === "전체" ? "전체 면적" : sizeRange}
             </span>
-            <span className="text-xs text-text-muted font-medium">
-              · {mobileKind} 기준 ({displayYmd})
-            </span>
+            <span className="text-xs font-bold text-navy">· {mobileKind} 기준</span>
+            <YmPicker ym={selectedYm} options={availableYms} onChange={setSelectedYm} />
           </div>
 
           {mobileKind === "전체" ? (
@@ -862,7 +941,7 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
               onClick={() => setShowMore((v) => !v)}
               className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-navy text-navy text-sm font-bold rounded-sm hover:bg-navy hover:text-white transition-colors duration-200 cursor-pointer"
             >
-              {showMore ? "최근 거래만 보기" : "과거 거래 더보기 (최근 6개월)"}
+              {showMore ? "최근 거래만 보기" : "과거 거래 더보기 (최근 1년)"}
               <ChevronDown
                 className={`w-4 h-4 transition-transform duration-200 ${showMore ? "rotate-180" : ""}`}
               />
