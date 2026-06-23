@@ -291,12 +291,25 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
     [mobileKind, filteredTrades, filteredRents]
   );
 
-  // '전체' 전광판용 유형별 건수 (최신 거래월) — PC·모바일 공용
+  // '전체' 전광판용 유형별 건수 (선택 거래월) — PC·모바일 공용. 전세·월세는 신규/갱신도 집계
   const counts = useMemo(() => {
     const maemae = filteredTrades.length;
-    const jeonse = filteredRents.filter((r) => !r.monthlyRent || r.monthlyRent === "0").length;
-    const wolse = filteredRents.length - jeonse;
-    return { total: maemae + jeonse + wolse, maemae, jeonse, wolse };
+    const jeonseArr = filteredRents.filter((r) => !r.monthlyRent || r.monthlyRent === "0");
+    const wolseArr = filteredRents.filter((r) => r.monthlyRent && r.monthlyRent !== "0");
+    const jeonse = jeonseArr.length;
+    const wolse = wolseArr.length;
+    const jeonseRenew = jeonseArr.filter((r) => r.contractType === "갱신").length;
+    const wolseRenew = wolseArr.filter((r) => r.contractType === "갱신").length;
+    return {
+      total: maemae + jeonse + wolse,
+      maemae,
+      jeonse,
+      wolse,
+      jeonseNew: jeonse - jeonseRenew,
+      jeonseRenew,
+      wolseNew: wolse - wolseRenew,
+      wolseRenew,
+    };
   }, [filteredTrades, filteredRents]);
 
   const displayYmd = selectedYm
@@ -516,10 +529,10 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
             // 전체: 전체 건수 + 유형별 건수
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { label: "전체 거래 건수", value: `${counts.total}건`, dot: "", icon: List },
-                { label: "매매", value: `${counts.maemae}건`, dot: KIND_COLOR.매매, icon: null },
-                { label: "전세", value: `${counts.jeonse}건`, dot: KIND_COLOR.전세, icon: null },
-                { label: "월세", value: `${counts.wolse}건`, dot: KIND_COLOR.월세, icon: null },
+                { label: "전체 거래 건수", value: `${counts.total}건`, dot: "", icon: List, nr: null },
+                { label: "매매", value: `${counts.maemae}건`, dot: KIND_COLOR.매매, icon: null, nr: null },
+                { label: "전세", value: `${counts.jeonse}건`, dot: KIND_COLOR.전세, icon: null, nr: { n: counts.jeonseNew, r: counts.jeonseRenew } },
+                { label: "월세", value: `${counts.wolse}건`, dot: KIND_COLOR.월세, icon: null, nr: { n: counts.wolseNew, r: counts.wolseRenew } },
               ].map((s) => (
                 <div key={s.label} className="bg-white rounded-sm border border-border p-5">
                   <div className="flex items-center gap-2 mb-2">
@@ -531,6 +544,13 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
                     <span className="text-xs text-text-muted">{s.label}</span>
                   </div>
                   <div className="text-xl font-bold text-navy">{s.value}</div>
+                  {s.nr && s.nr.n + s.nr.r > 0 && (
+                    <div className="text-xs font-bold mt-1">
+                      <span className="text-blue-600">신규 {s.nr.n}</span>
+                      <span className="text-text-light mx-1">·</span>
+                      <span className="text-gold-dark">갱신 {s.nr.r}</span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -588,10 +608,10 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
             // 전체: 전체 건수 + 유형별 건수
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: "전체 거래 건수", value: `${counts.total}건`, dot: "", icon: List },
-                { label: "매매", value: `${counts.maemae}건`, dot: KIND_COLOR.매매, icon: null },
-                { label: "전세", value: `${counts.jeonse}건`, dot: KIND_COLOR.전세, icon: null },
-                { label: "월세", value: `${counts.wolse}건`, dot: KIND_COLOR.월세, icon: null },
+                { label: "전체 거래 건수", value: `${counts.total}건`, dot: "", icon: List, nr: null },
+                { label: "매매", value: `${counts.maemae}건`, dot: KIND_COLOR.매매, icon: null, nr: null },
+                { label: "전세", value: `${counts.jeonse}건`, dot: KIND_COLOR.전세, icon: null, nr: { n: counts.jeonseNew, r: counts.jeonseRenew } },
+                { label: "월세", value: `${counts.wolse}건`, dot: KIND_COLOR.월세, icon: null, nr: { n: counts.wolseNew, r: counts.wolseRenew } },
               ].map((s) => (
                 <div key={s.label} className="bg-white rounded-sm border border-border p-4">
                   <div className="flex items-center gap-1.5 mb-1.5">
@@ -603,6 +623,13 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
                     <span className="text-[11px] text-text-muted">{s.label}</span>
                   </div>
                   <div className="text-lg font-bold text-navy">{s.value}</div>
+                  {s.nr && s.nr.n + s.nr.r > 0 && (
+                    <div className="text-[11px] font-bold mt-1">
+                      <span className="text-blue-600">신규 {s.nr.n}</span>
+                      <span className="text-text-light mx-1">·</span>
+                      <span className="text-gold-dark">갱신 {s.nr.r}</span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
