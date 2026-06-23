@@ -214,7 +214,7 @@ export function formatAmount(amount: string): string {
   if (num >= 10000) {
     const uk = Math.floor(num / 10000);
     const man = num % 10000;
-    return man > 0 ? `${uk}억 ${man.toLocaleString()}` : `${uk}억`;
+    return man > 0 ? `${uk}억 ${man.toLocaleString()}만` : `${uk}억`;
   }
   return `${num.toLocaleString()}만`;
 }
