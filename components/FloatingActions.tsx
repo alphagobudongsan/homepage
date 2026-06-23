@@ -29,6 +29,30 @@ function NaverIcon({ className = "" }: { className?: string }) {
   );
 }
 
+// 집 + 돋보기 = 매물 검색 (라인 아이콘, 다른 아이콘과 통일감)
+function MaemulIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      {/* 집 */}
+      <path d="M3.5 11 12 4l6 5" />
+      <path d="M5.5 9.7V19h6" />
+      <path d="M9.2 19v-4.2h3.4V19" />
+      {/* 돋보기 */}
+      <circle cx="16.7" cy="15.5" r="3.4" />
+      <path d="m19.3 18.1 2.4 2.4" />
+    </svg>
+  );
+}
+
 const ACTIONS = [
   {
     label: "카카오상담",
@@ -45,6 +69,14 @@ const ACTIONS = [
     text: "text-white",
     Icon: Phone,
     external: false,
+  },
+  {
+    label: "옥정매물",
+    href: "https://fin.land.naver.com/realtor/n8644222",
+    bg: "bg-blue-900",
+    text: "text-white",
+    Icon: MaemulIcon,
+    external: true,
   },
   {
     label: "블로그",
@@ -89,6 +121,17 @@ export default function FloatingActions() {
         </button>
       )}
 
+      {/* 접기/펴기 토글 — 모바일 전용 (상단) */}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-label={open ? "메뉴 접기" : "메뉴 열기"}
+        aria-expanded={open}
+        className="lg:hidden flex items-center justify-center w-12 h-12 rounded-full bg-navy text-white shadow-lg hover:bg-navy-light transition-colors duration-200 cursor-pointer"
+      >
+        {open ? <X className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
+      </button>
+
       {/* 접히는 그룹 — 모바일에선 open일 때만, PC(lg)는 항상 표시 */}
       <div
         className={`flex flex-col items-end gap-2 ${open ? "flex" : "hidden lg:flex"}`}
@@ -117,17 +160,6 @@ export default function FloatingActions() {
           </a>
         ))}
       </div>
-
-      {/* 접기/펴기 토글 — 모바일 전용 */}
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-label={open ? "메뉴 접기" : "메뉴 열기"}
-        aria-expanded={open}
-        className="lg:hidden flex items-center justify-center w-12 h-12 rounded-full bg-navy text-white shadow-lg hover:bg-navy-light transition-colors duration-200 cursor-pointer"
-      >
-        {open ? <X className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
-      </button>
     </div>
   );
 }
