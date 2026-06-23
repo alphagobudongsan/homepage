@@ -24,6 +24,56 @@ export function toPyeong(areaM2: number): number {
   return Math.round((areaM2 / 0.74) * 0.3025);
 }
 
+// 단지별 전용면적(㎡) → 평 매핑 — 네이버부동산 캡쳐 기준(2026-06).
+// 같은 84㎡도 단지마다 31~35평으로 달라 단지별로 고정. 키는 공백 제거.
+const PYEONG_TABLE: Record<string, [number, number][]> = {
+  "옥정센트럴파크푸르지오": [[59, 24], [84, 34]],
+  "e편한세상옥정에듀써밋": [[67, 28], [74, 30], [84, 34]],
+  "e편한세상옥정더퍼스트": [[66, 28], [74, 30], [84, 34]],
+  "e편한세상옥정메트로포레": [[67, 28], [74, 30], [84, 34]],
+  "e편한세상옥정리더스가든": [[84, 33], [99, 38]],
+  "e편한세상옥정어반센트럴": [[74, 29], [84, 33]],
+  "양주옥정유림노르웨이숲": [[72, 28], [75, 30], [84, 34]],
+  "대성베르힐옥정더센트로": [[72, 28], [74, 29], [84, 33], [100, 40]],
+  "양주옥정린파밀리에": [[74, 29], [84, 33]],
+  "양주옥정신도시디에트르에듀포레": [[74, 30], [84, 34]],
+  "세창리베하우스": [[84, 31]],
+  "양주옥정신도시대방노블랜드더시그니처": [[72, 29], [84, 33], [117, 42]],
+  "양주옥정신도시제일풍경채레이크시티1단지": [[73, 29], [84, 33], [99, 39]],
+  "양주옥정신도시제일풍경채레이크시티2단지": [[73, 29], [84, 33], [99, 39]],
+  "율정마을13단지": [[74, 30], [84, 34]],
+  "양주옥정신도시디에트르프레스티지": [[75, 30], [84, 34], [100, 40], [167, 67]],
+  "양주옥정LH엘리프": [[53, 21], [59, 24]],
+  "양주옥정더원파크빌리지": [[84, 35]],
+  "리젠시빌란트": [[53, 23], [56, 24]],
+  "양주옥정신도시한신더휴": [[75, 30], [80, 32], [84, 34], [96, 38]],
+  "옥정중앙역중흥S-클래스센텀시티(1단지)": [[74, 30], [84, 33]],
+  "옥정중앙역중흥S-클래스센텀시티(2단지)": [[74, 29], [84, 33]],
+};
+
+const PYEONG_TABLE_N: Record<string, [number, number][]> = Object.fromEntries(
+  Object.entries(PYEONG_TABLE).map(([k, v]) => [k.replace(/\s/g, ""), v])
+);
+
+// 전용면적 → 평. 단지별 표(±5㎡ 이내 최근접) 우선, 없으면 근사 공식.
+export function pyeongOf(complexName: string, areaM2: number): number {
+  if (!areaM2) return 0;
+  const table = PYEONG_TABLE_N[(complexName || "").replace(/\s/g, "")];
+  if (table) {
+    let best: [number, number] | null = null;
+    let bestDiff = Infinity;
+    for (const e of table) {
+      const d = Math.abs(e[0] - areaM2);
+      if (d < bestDiff) {
+        bestDiff = d;
+        best = e;
+      }
+    }
+    if (best && bestDiff <= 5) return best[1];
+  }
+  return Math.round(areaM2 / 2.47); // 폴백(전용률 약 75%)
+}
+
 // 전용면적 → 타입 (84, 59 등 정수 표기)
 export function areaType(areaM2: number): number {
   return Math.round(areaM2);

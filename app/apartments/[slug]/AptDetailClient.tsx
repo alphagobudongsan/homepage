@@ -2,8 +2,9 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { UnifiedDeal, MonthlyPoint, toPyeong } from "@/lib/apartments";
+import { UnifiedDeal, MonthlyPoint, pyeongOf } from "@/lib/apartments";
 import { formatAmount } from "@/lib/molit";
+import AreaText from "@/components/AreaText";
 import { AptComposedChart } from "@/components/PriceChart";
 import { ChevronLeft, MapPin, Calendar, Building2, Phone } from "lucide-react";
 
@@ -263,7 +264,7 @@ export default function AptDetailClient({
                       : "border-border text-text-muted hover:border-gold hover:text-navy"
                   }`}
                 >
-                  {t === "전체" ? "전체 타입" : `${t}㎡ (${toPyeong(Number(t))}평)`}
+                  {t === "전체" ? "전체 타입" : `${t}㎡ (${pyeongOf(name, Number(t))}평)`}
                 </button>
               ))}
             </div>
@@ -331,10 +332,7 @@ export default function AptDetailClient({
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm text-text whitespace-nowrap">
-                        {d.type84}㎡
-                        <span className="text-text-light">
-                          {" "}({toPyeong(d.area)}평)
-                        </span>
+                        <AreaText complex={name} area={d.area} decimals={1} />
                       </td>
                       <td className="px-4 py-3 text-sm text-text whitespace-nowrap">
                         {d.floor}층

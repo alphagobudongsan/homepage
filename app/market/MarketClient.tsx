@@ -6,6 +6,7 @@ import { TradeItem, RentItem, formatAmount } from "@/lib/molit";
 import { TrendingUp, TrendingDown, BarChart3, List, Building2, Ruler, Flame, Wallet, ArrowLeftRight, Pointer, ChevronDown } from "lucide-react";
 import HoverFillButton from "@/components/ui/hover-fill-button";
 import SelectMenu from "@/components/ui/select-menu";
+import AreaText from "@/components/AreaText";
 
 interface Props {
   trades: TradeItem[]; // 최근 6개월 매매
@@ -19,6 +20,15 @@ const dateKey = (y: string, m: string, d: string) =>
   Number(`${y}${m.padStart(2, "0")}${d.padStart(2, "0")}`);
 
 const SIZE_RANGES = ["전체", "60㎡ 미만", "60~85㎡", "85~110㎡", "110㎡ 이상"];
+
+// 면적 선택 드롭다운 표시 라벨 (평 병기 — 60㎡≈24평, 85㎡≈34평, 110㎡≈44평)
+const SIZE_RANGE_LABEL: Record<string, string> = {
+  "전체": "전체 면적",
+  "60㎡ 미만": "60㎡ 미만 (24평 이하)",
+  "60~85㎡": "60~85㎡ (24~35평)",
+  "85~110㎡": "85~110㎡ (36~41평)",
+  "110㎡ 이상": "110㎡ 이상 (42평 이상)",
+};
 
 // 항상 고정 노출할 인기 단지 (실제 API 단지명과 공백 무시하고 매칭)
 const POPULAR_COMPLEXES = [
@@ -221,7 +231,7 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
       kind: "매매" | "전세" | "월세";
       aptNm: string;
       price: string;
-      area: string;
+      area: number;
       floor: string;
       date: string;
       sortKey: number;
@@ -235,7 +245,7 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
         kind: "매매",
         aptNm: t.aptNm,
         price: `${formatAmount(t.dealAmount)}원`,
-        area: `${parseFloat(t.excluUseAr).toFixed(1)}㎡`,
+        area: parseFloat(t.excluUseAr),
         floor: `${t.floor}층`,
         date: `${t.dealYear}.${t.dealMonth}.${t.dealDay}`,
         sortKey: key(t.dealYear, t.dealMonth, t.dealDay),
@@ -250,7 +260,7 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
         price: isJeonse
           ? `${formatAmount(r.deposit)}원`
           : `${formatAmount(r.deposit)} / 월 ${r.monthlyRent}만`,
-        area: `${parseFloat(r.excluUseAr).toFixed(1)}㎡`,
+        area: parseFloat(r.excluUseAr),
         floor: `${r.floor}층`,
         date: `${r.dealYear}.${r.dealMonth}.${r.dealDay}`,
         sortKey: key(r.dealYear, r.dealMonth, r.dealDay),
@@ -352,7 +362,7 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
                   onChange={setSizeRange}
                   options={SIZE_RANGES.map((s) => ({
                     value: s,
-                    label: s === "전체" ? "전체 면적" : s,
+                    label: SIZE_RANGE_LABEL[s] ?? s,
                   }))}
                 />
               </div>
@@ -602,7 +612,9 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
                             {d.aptNm}
                           </td>
                         )}
-                        <td className="px-3 sm:px-4 py-3 text-sm text-text whitespace-nowrap">{d.area}</td>
+                        <td className="px-3 sm:px-4 py-3 text-sm text-text whitespace-nowrap">
+                          <AreaText complex={d.aptNm} area={d.area} decimals={1} />
+                        </td>
                         <td className="px-3 sm:px-4 py-3 text-sm text-text whitespace-nowrap">{d.floor}</td>
                         <td className="px-3 sm:px-4 py-3 text-sm text-text-muted whitespace-nowrap">{d.date}</td>
                         <td className="px-3 sm:px-4 py-3 text-sm font-bold text-navy whitespace-nowrap">
@@ -658,7 +670,7 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
                           </td>
                         )}
                         <td className="px-3 sm:px-4 py-3 text-sm text-text whitespace-nowrap">
-                          {parseFloat(t.excluUseAr).toFixed(1)}㎡
+                          <AreaText complex={t.aptNm} area={t.excluUseAr} decimals={1} />
                         </td>
                         <td className="px-3 sm:px-4 py-3 text-sm text-text whitespace-nowrap">
                           {t.floor}층
@@ -711,7 +723,7 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
                             </td>
                           )}
                           <td className="px-3 sm:px-4 py-3 text-sm text-text whitespace-nowrap">
-                            {parseFloat(r.excluUseAr).toFixed(1)}㎡
+                            <AreaText complex={r.aptNm} area={r.excluUseAr} decimals={1} />
                           </td>
                           <td className="px-3 sm:px-4 py-3 text-sm text-text whitespace-nowrap">
                             {r.floor}층
@@ -833,7 +845,7 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
                   <div className="flex items-baseline justify-between gap-2">
                     <span className="text-base font-bold text-navy">{d.price}</span>
                     <span className="text-xs text-text-muted whitespace-nowrap">
-                      {d.area} · {d.floor}
+                      <AreaText complex={d.aptNm} area={d.area} decimals={1} /> · {d.floor}
                     </span>
                   </div>
                 </div>

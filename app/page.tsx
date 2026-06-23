@@ -25,6 +25,7 @@ import {
   RentItem,
 } from "@/lib/molit";
 import FAQ from "@/components/FAQ";
+import AreaText from "@/components/AreaText";
 
 // 10분 캐시 (빠른 로딩 + 실시간 느낌)
 export const revalidate = 600;
@@ -55,7 +56,7 @@ const heroFeatures = [
 interface Highlight {
   complex: string;
   type: "매매" | "전세" | "월세";
-  size: string;
+  area: number;
   price: string;
   dateLabel: string;
 }
@@ -96,7 +97,7 @@ function buildHighlights(trades: TradeItem[], rents: RentItem[]): Highlight[] {
     out.push({
       complex: t.aptNm,
       type: "매매",
-      size: `${Math.round(parseFloat(t.excluUseAr))}㎡`,
+      area: parseFloat(t.excluUseAr),
       price: `${formatAmount(t.dealAmount)}원`,
       dateLabel: `${t.dealMonth}.${t.dealDay} 거래`,
     });
@@ -114,7 +115,7 @@ function buildHighlights(trades: TradeItem[], rents: RentItem[]): Highlight[] {
     out.push({
       complex: r.aptNm,
       type: "전세",
-      size: `${Math.round(parseFloat(r.excluUseAr))}㎡`,
+      area: parseFloat(r.excluUseAr),
       price: `${formatAmount(r.deposit)}원`,
       dateLabel: `${r.dealMonth}.${r.dealDay} 거래`,
     });
@@ -381,7 +382,9 @@ export default async function HomePage() {
                   >
                     {item.type}
                   </span>
-                  <span className="text-xs text-text-muted">{item.size}</span>
+                  <span className="text-xs text-text-muted">
+                    <AreaText complex={item.complex} area={item.area} />
+                  </span>
                 </div>
                 <p className="text-sm font-bold text-text mb-3 truncate group-hover:text-gold transition-colors">
                   {item.complex}
