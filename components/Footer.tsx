@@ -104,21 +104,26 @@ export default function Footer() {
 
         {/* 공인중개사법 표시·광고 의무 정보 (개업공인중개사 등록정보) */}
         <div className="mt-10 pt-8 border-t border-white/10">
-          <h3 className="text-white/70 font-semibold text-xs tracking-wide mb-4">
-            개업공인중개사 등록정보
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5 text-xs text-white/45 leading-relaxed">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-6 text-xs text-white/45 leading-relaxed">
             <div>
+              <h3 className="text-white/70 font-semibold text-xs tracking-wide mb-3">
+                개업공인중개사 등록정보
+              </h3>
               <p className="text-white/75 font-semibold mb-1">알파고031-864-4222공인중개사사무소</p>
               <p>대표 강은주 · 등록번호 41630-2021-00094</p>
               <p>경기도 양주시 옥정로5길 35, 상가101호</p>
               <p>전화 031-864-4222</p>
+              <p>사업자번호 : 542-04-02117</p>
             </div>
             <div>
+              <h3 className="text-white/70 font-semibold text-xs tracking-wide mb-3">
+                개업공인중개사 등록정보
+              </h3>
               <p className="text-white/75 font-semibold mb-1">알파고공인중개사사무소</p>
               <p>대표 권정욱 · 등록번호 41630-2022-00066</p>
               <p>경기도 양주시 옥정로5길 35, 상가101호</p>
               <p>전화 031-864-4222</p>
+              <p>사업자번호 : 307-28-01151</p>
             </div>
           </div>
         </div>
