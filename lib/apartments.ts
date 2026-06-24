@@ -74,6 +74,29 @@ export function pyeongOf(complexName: string, areaM2: number): number {
   return Math.round(areaM2 / 2.47); // 폴백(전용률 약 75%)
 }
 
+// 시세 노출에서 제외할 단지 (임대·공공 등). 홈 전광판 + 시세(/market) 공통. 키는 공백 제거.
+const EXCLUDED_COMPLEXES = new Set(
+  [
+    "금호건설제이드웰엔에이치에프",
+    "더파크포레계룡건설엔에이치에프",
+    "더파크포레태영엔에이치에프",
+    "지에스건설제이드웰엔에이치에프",
+    "양주옥정3단지",
+    "옥정25단지",
+    "옥정천년나무8단지",
+    "옥정천년나무16단지",
+    "율정마을7단지",
+    "제일풍경채옥정",
+    "세영리첼레이크파크",
+    "모아미래도파크뷰",
+    "ELIF옥정시그니처",
+  ].map((s) => s.replace(/\s/g, ""))
+);
+
+export function isExcludedComplex(name: string): boolean {
+  return EXCLUDED_COMPLEXES.has((name || "").replace(/\s/g, ""));
+}
+
 // 전용면적 → 타입 (84, 59 등 정수 표기)
 export function areaType(areaM2: number): number {
   return Math.round(areaM2);

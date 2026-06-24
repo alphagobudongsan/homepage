@@ -5,6 +5,7 @@ import {
   fetchLatestAptTrade,
   fetchLatestAptRent,
 } from "@/lib/molit";
+import { isExcludedComplex } from "@/lib/apartments";
 import MarketClient from "./MarketClient";
 import MarketLoading from "./loading";
 
@@ -25,6 +26,10 @@ export default async function MarketPage() {
   // 데이터가 전혀 없으면(API 일시 오류) 목업 폴백
   if (trades.length === 0) trades = (await fetchLatestAptTrade("41630")).items;
   if (rents.length === 0) rents = (await fetchLatestAptRent("41630")).items;
+
+  // 임대·공공 등 제외 단지는 시세에서도 빼기 (홈 전광판과 동일 기준)
+  trades = trades.filter((t) => !isExcludedComplex(t.aptNm));
+  rents = rents.filter((r) => !isExcludedComplex(r.aptNm));
 
   // 데이터가 있는 가장 최근 거래월 (yyyymm)
   const ymOf = (y: string, m: string) => `${y}${m.padStart(2, "0")}`;

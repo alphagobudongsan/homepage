@@ -26,6 +26,7 @@ import {
 } from "@/lib/molit";
 import FAQ from "@/components/FAQ";
 import AreaText from "@/components/AreaText";
+import { isExcludedComplex } from "@/lib/apartments";
 
 // 10분 캐시 (빠른 로딩 + 실시간 느낌)
 export const revalidate = 600;
@@ -62,26 +63,7 @@ interface Highlight {
 }
 
 // 라이브 실거래 데이터에서 최근 거래 하이라이트 추출 (단지 중복 제거)
-// 홈 메인 전광판에서 제외할 단지 (임대·공공 등). 시세 페이지(/market)에는 그대로 노출
-const HOME_EXCLUDED = new Set(
-  [
-    "금호건설제이드웰엔에이치에프",
-    "더파크포레계룡건설엔에이치에프",
-    "더파크포레태영엔에이치에프",
-    "지에스건설제이드웰엔에이치에프",
-    "양주옥정3단지",
-    "옥정25단지",
-    "옥정천년나무8단지",
-    "옥정천년나무16단지",
-    "율정마을7단지",
-    "제일풍경채옥정",
-    "세영리첼레이크파크",
-    "모아미래도파크뷰",
-    "ELIF옥정시그니처",
-  ].map((s) => s.replace(/\s/g, ""))
-);
-const isHomeExcluded = (name: string) => HOME_EXCLUDED.has(name.replace(/\s/g, ""));
-
+// 임대·공공 등 제외 단지는 lib/apartments의 isExcludedComplex 공용 기준 사용 (홈+시세 동일)
 function buildHighlights(trades: TradeItem[], rents: RentItem[]): Highlight[] {
   const out: Highlight[] = [];
   const seen = new Set<string>();
@@ -90,7 +72,7 @@ function buildHighlights(trades: TradeItem[], rents: RentItem[]): Highlight[] {
     (a, b) => Number(b.dealDay) - Number(a.dealDay)
   );
   for (const t of recentTrades) {
-    if (isHomeExcluded(t.aptNm)) continue;
+    if (isExcludedComplex(t.aptNm)) continue;
     if (seen.has(t.aptNm)) continue;
     if (out.filter((o) => o.type === "매매").length >= 2) break;
     seen.add(t.aptNm);
@@ -108,7 +90,7 @@ function buildHighlights(trades: TradeItem[], rents: RentItem[]): Highlight[] {
     .filter((r) => !r.monthlyRent || r.monthlyRent === "0")
     .sort((a, b) => Number(b.dealDay) - Number(a.dealDay));
   for (const r of recentJeonse) {
-    if (isHomeExcluded(r.aptNm)) continue;
+    if (isExcludedComplex(r.aptNm)) continue;
     if (seen.has(r.aptNm)) continue;
     if (out.filter((o) => o.type === "전세").length >= 2) break;
     seen.add(r.aptNm);
