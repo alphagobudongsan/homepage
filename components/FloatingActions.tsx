@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import Link from "next/link";
 import { Phone, ArrowUp, BarChart3, X, ChevronUp } from "lucide-react";
 
@@ -29,7 +29,7 @@ function NaverIcon({ className = "" }: { className?: string }) {
   );
 }
 
-// 집 + 돋보기 = 매물 검색 (라인 아이콘, 다른 아이콘과 통일감)
+// 집 + 돋보기 = 매물 검색 (라인 아이콘)
 function MaemulIcon({ className = "" }: { className?: string }) {
   return (
     <svg
@@ -42,59 +42,61 @@ function MaemulIcon({ className = "" }: { className?: string }) {
       className={className}
       aria-hidden="true"
     >
-      {/* 집 */}
       <path d="M3.5 11 12 4l6 5" />
       <path d="M5.5 9.7V19h6" />
       <path d="M9.2 19v-4.2h3.4V19" />
-      {/* 돋보기 */}
       <circle cx="16.7" cy="15.5" r="3.4" />
       <path d="m19.3 18.1 2.4 2.4" />
     </svg>
   );
 }
 
-const ACTIONS = [
-  {
-    label: "카카오상담",
-    href: "https://pf.kakao.com/_xhtexnG",
-    bg: "bg-[#FEE500]",
-    text: "text-[#191919]",
-    Icon: KakaoIcon,
-    external: true,
-  },
-  {
-    label: "바로문의",
-    href: "tel:010-4699-4222",
-    bg: "bg-gold",
-    text: "text-white",
-    Icon: Phone,
-    external: false,
-  },
-  {
-    label: "옥정매물",
-    href: "https://fin.land.naver.com/realtor/n8644222",
-    bg: "bg-blue-900",
-    text: "text-white",
-    Icon: MaemulIcon,
-    external: true,
-  },
-  {
-    label: "블로그",
-    href: "https://blog.naver.com/ipt_korea",
-    bg: "bg-[#03C75A]",
-    text: "text-white",
-    Icon: NaverIcon,
-    external: true,
-  },
-  {
-    label: "유튜브",
-    href: "https://www.youtube.com/@%EC%96%91%EC%A3%BC%EC%98%A5%EC%A0%95%EC%95%8C%ED%8C%8C%EA%B3%A0%EB%B6%80%EB%8F%99%EC%82%B0",
-    bg: "bg-[#FF0000]",
-    text: "text-white",
-    Icon: YoutubeIcon,
-    external: true,
-  },
+type NavItem = {
+  label: string;
+  href: string;
+  bg: string;
+  text: string;
+  Icon: ComponentType<{ className?: string }>;
+  type: "internal" | "external" | "tel";
+};
+
+const NAV_ITEMS: NavItem[] = [
+  { label: "실거래가 확인", href: "/market", bg: "bg-blue-600", text: "text-white", Icon: BarChart3, type: "internal" },
+  { label: "카카오상담", href: "https://pf.kakao.com/_xhtexnG", bg: "bg-[#FEE500]", text: "text-[#191919]", Icon: KakaoIcon, type: "external" },
+  { label: "바로문의", href: "tel:010-4699-4222", bg: "bg-gold", text: "text-white", Icon: Phone, type: "tel" },
+  { label: "옥정매물", href: "https://fin.land.naver.com/realtor/n8644222", bg: "bg-blue-900", text: "text-white", Icon: MaemulIcon, type: "external" },
+  { label: "블로그", href: "https://blog.naver.com/ipt_korea", bg: "bg-[#03C75A]", text: "text-white", Icon: NaverIcon, type: "external" },
+  { label: "유튜브", href: "https://www.youtube.com/@%EC%96%91%EC%A3%BC%EC%98%A5%EC%A0%95%EC%95%8C%ED%8C%8C%EA%B3%A0%EB%B6%80%EB%8F%99%EC%82%B0", bg: "bg-[#FF0000]", text: "text-white", Icon: YoutubeIcon, type: "external" },
 ];
+
+function ItemLink({
+  item,
+  className,
+  children,
+}: {
+  item: NavItem;
+  className: string;
+  children: React.ReactNode;
+}) {
+  if (item.type === "internal") {
+    return (
+      <Link href={item.href} aria-label={item.label} className={className}>
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <a
+      href={item.href}
+      target={item.type === "external" ? "_blank" : undefined}
+      rel={item.type === "external" ? "noopener noreferrer" : undefined}
+      aria-label={item.label}
+      className={className}
+    >
+      {children}
+    </a>
+  );
+}
 
 export default function FloatingActions() {
   const [showTop, setShowTop] = useState(false);
@@ -121,7 +123,23 @@ export default function FloatingActions() {
         </button>
       )}
 
-      {/* 접기/펴기 토글 — 모바일 전용 (상단) */}
+      {/* 데스크탑(lg+): 아이콘만 + 마우스 올리면 라벨 슬라이드 (세로, 균일 크기) */}
+      <div className="hidden lg:flex flex-col items-end gap-3">
+        {NAV_ITEMS.map((item) => (
+          <ItemLink
+            key={item.label}
+            item={item}
+            className={`group relative flex items-center justify-center w-12 h-12 rounded-full shadow-lg ${item.bg} ${item.text} transition-transform duration-200 hover:scale-110 cursor-pointer`}
+          >
+            <item.Icon className="w-5 h-5" />
+            <span className="pointer-events-none absolute right-full mr-3 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-navy text-white px-3 py-1.5 text-[13px] font-bold shadow-lg opacity-0 translate-x-1 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0">
+              {item.label}
+            </span>
+          </ItemLink>
+        ))}
+      </div>
+
+      {/* 모바일 전용: 접기/펴기 토글 (상단) */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -132,32 +150,17 @@ export default function FloatingActions() {
         {open ? <X className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
       </button>
 
-      {/* 접히는 그룹 — 모바일에선 open일 때만, PC(lg)는 항상 표시 */}
-      <div
-        className={`flex flex-col items-end gap-2 ${open ? "flex" : "hidden lg:flex"}`}
-      >
-        {/* 모바일 전용: 옥정동 아파트 실거래가 확인 (가시성 강조) */}
-        <Link
-          href="/market"
-          aria-label="옥정동 아파트 실거래가 확인"
-          className="lg:hidden flex items-center gap-2 h-12 pl-3.5 pr-4 rounded-full shadow-lg bg-blue-600 text-white font-bold text-[13px] transition-transform duration-200 hover:scale-105 cursor-pointer"
-        >
-          <BarChart3 className="w-5 h-5 flex-shrink-0" />
-          <span className="whitespace-nowrap">실거래가 확인</span>
-        </Link>
-
-        {ACTIONS.map((a) => (
-          <a
-            key={a.label}
-            href={a.href}
-            target={a.external ? "_blank" : undefined}
-            rel={a.external ? "noopener noreferrer" : undefined}
-            aria-label={a.label}
-            className={`group flex items-center gap-2 h-12 pl-3.5 pr-4 rounded-full shadow-lg ${a.bg} ${a.text} font-bold text-[13px] transition-transform duration-200 hover:scale-105 cursor-pointer`}
+      {/* 모바일 전용: 라벨 보이는 펼침 그룹 */}
+      <div className={`lg:hidden flex-col items-end gap-2 ${open ? "flex" : "hidden"}`}>
+        {NAV_ITEMS.map((item) => (
+          <ItemLink
+            key={item.label}
+            item={item}
+            className={`flex items-center gap-2 h-12 pl-3.5 pr-4 rounded-full shadow-lg ${item.bg} ${item.text} font-bold text-[13px] transition-transform duration-200 hover:scale-105 cursor-pointer`}
           >
-            <a.Icon className="w-5 h-5 flex-shrink-0" />
-            <span className="whitespace-nowrap">{a.label}</span>
-          </a>
+            <item.Icon className="w-5 h-5 flex-shrink-0" />
+            <span className="whitespace-nowrap">{item.label}</span>
+          </ItemLink>
         ))}
       </div>
     </div>
