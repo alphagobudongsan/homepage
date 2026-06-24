@@ -91,12 +91,32 @@ export default async function CaseDetailPage({
     mainEntityOfPage: `${SITE_URL}/cases/${c.id}`,
   };
 
+  // 자주 묻는 질문 → FAQPage 구조화데이터 (검색 리치결과 + AI 인용 유리)
+  const faqJsonLd =
+    c.faq && c.faq.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: c.faq.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }
+      : null;
+
   return (
     <div className="pt-16 min-h-screen bg-cream">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(caseJsonLd) }}
       />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
       {/* Breadcrumb */}
       <div className="bg-white border-b border-border">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
@@ -233,6 +253,27 @@ export default async function CaseDetailPage({
             ))}
           </ul>
         </div>
+
+        {/* FAQ — 자주 묻는 질문 (검색·AI 노출용) */}
+        {c.faq && c.faq.length > 0 && (
+          <div className="bg-white border border-border rounded-sm p-6 sm:p-8 mb-10">
+            <h2 className="text-base font-bold text-navy mb-5">자주 묻는 질문</h2>
+            <div className="divide-y divide-border-light">
+              {c.faq.map((f, i) => (
+                <div key={i} className="py-4 first:pt-0 last:pb-0">
+                  <p className="flex gap-2 font-bold text-navy text-sm mb-2">
+                    <span className="text-gold flex-shrink-0">Q.</span>
+                    <span>{f.q}</span>
+                  </p>
+                  <p className="flex gap-2 text-sm text-text-muted leading-relaxed">
+                    <span className="text-text-light flex-shrink-0 font-bold">A.</span>
+                    <span>{f.a}</span>
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* CTA */}
         <div className="bg-navy rounded-sm p-8 mb-10 text-center">
