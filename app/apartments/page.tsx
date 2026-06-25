@@ -5,7 +5,10 @@ import ApartmentsClient from "./ApartmentsClient";
 
 export const metadata = {
   title: "아파트 단지 정보 | 알파고 공인중개사사무소",
-  description: "경기도 양주시 옥정동 아파트 단지별 실거래 정보를 확인하세요.",
+  description:
+    "옥정신도시 아파트 단지별 세대수·실거래가·시세 추이. 옥정동 단지별 매매·전세 정보를 한눈에.",
+  keywords:
+    "옥정신도시 아파트, 옥정동 단지 정보, 옥정 단지별 시세, 옥정신도시 부동산",
 };
 
 // 6시간 캐시 (단지 정보·세대수는 자주 바뀌지 않아 길게 — 갱신 부담↓, 빠른 로딩)

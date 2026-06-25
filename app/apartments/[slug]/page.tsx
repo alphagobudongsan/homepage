@@ -23,7 +23,8 @@ export async function generateMetadata({
   const name = decodeURIComponent(slug);
   return {
     title: `${name} 실거래가 | 알파고 공인중개사사무소`,
-    description: `${name}의 매매·전세·월세 실거래 정보와 시세 추이를 확인하세요.`,
+    description: `${name} 매매·전세·월세 실거래가와 시세 추이를 국토교통부 실거래가로 확인하세요. 옥정신도시(양주 옥정동) 아파트.`,
+    keywords: `${name}, ${name} 매매, ${name} 전세, ${name} 시세, 옥정신도시 아파트, 옥정동 실거래가`,
   };
 }
 
