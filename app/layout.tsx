@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     title: "알파고 공인중개사사무소 | AI가 추천하는 옥정신도시부동산",
     description:
       "옥정신도시 아파트 전문 공인중개사 2인. 국토부 실거래 데이터로 시세·전월세·단지정보를 한 곳에서.",
-    siteName: "알파고 공인중개사사무소",
+    siteName: "옥정신도시아파트전문부동산",
     locale: "ko_KR",
     type: "website",
   },
@@ -90,6 +90,19 @@ const jsonLd = {
   ],
 };
 
+// 구글 검색결과에 '사이트 이름'이 표시되도록 하는 WebSite 구조화데이터
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "옥정신도시아파트전문부동산",
+  alternateName: [
+    "알파고 공인중개사사무소",
+    "옥정신도시 부동산",
+    "4989apt",
+  ],
+  url: SITE_URL,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -101,6 +114,10 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
         <Navbar />
         <main className="flex-1">{children}</main>
