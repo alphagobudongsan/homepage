@@ -7,6 +7,7 @@ import { TrendingUp, TrendingDown, BarChart3, List, Building2, Ruler, Flame, Wal
 import HoverFillButton from "@/components/ui/hover-fill-button";
 import SelectMenu from "@/components/ui/select-menu";
 import AreaText from "@/components/AreaText";
+import { pyeongOf } from "@/lib/apartments";
 
 interface Props {
   trades: TradeItem[]; // 최근 6개월 매매
@@ -165,6 +166,35 @@ function YmPicker({
   );
 }
 
+// 전광판 헤더용 면적 선택기 (위 '면적 선택'과 같은 상태 공유 → 연동)
+function AreaPicker({
+  value,
+  options,
+  onChange,
+}: {
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (v: string) => void;
+}) {
+  return (
+    <span className="relative inline-flex items-center">
+      <select
+        aria-label="면적 선택"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="appearance-none bg-white border border-border rounded-sm pl-2 pr-5 py-0.5 text-xs font-bold text-navy cursor-pointer focus:outline-none focus:border-gold hover:border-gold transition-colors"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="w-3 h-3 text-text-muted absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none" />
+    </span>
+  );
+}
+
 export default function MarketClient({ trades, rents, currentYmd, accessDate }: Props) {
   const [tab, setTab] = useState<TabKind>("전체");
   // 모바일 통합 리스트 종류 필터 (범례 클릭)
@@ -232,8 +262,32 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
     ).filter((c): c is string => Boolean(c));
   }, [complexOptions]);
 
-  const matchFilter = (aptNm: string, ar: string) =>
-    (complex === "전체" || aptNm === complex) && sizeInRange(ar, sizeRange);
+  // 면적 선택 옵션: '전체' 단지면 일반 구간(SIZE_RANGES), 특정 단지면 그 단지의 실제 평형
+  const areaSelectOptions = useMemo(() => {
+    if (complex === "전체") {
+      return SIZE_RANGES.map((s) => ({ value: s, label: SIZE_RANGE_LABEL[s] ?? s }));
+    }
+    const source = [...trades, ...rents].filter((d) => d.aptNm === complex);
+    const sizes = Array.from(
+      new Set(source.map((d) => Math.round(parseFloat(d.excluUseAr))))
+    )
+      .filter(Boolean)
+      .sort((a, b) => a - b);
+    return [
+      { value: "전체", label: "전체 면적" },
+      ...sizes.map((n) => ({ value: String(n), label: `${n}㎡ (${pyeongOf(complex, n)}평)` })),
+    ];
+  }, [complex, trades, rents]);
+
+  // 선택값이 현재 옵션에 없으면(단지 바뀜) '전체'로 폴백
+  const effSize = areaSelectOptions.some((o) => o.value === sizeRange) ? sizeRange : "전체";
+
+  const matchFilter = (aptNm: string, ar: string) => {
+    if (complex !== "전체" && aptNm !== complex) return false;
+    if (effSize === "전체") return true;
+    if (complex === "전체") return sizeLabel(ar) === effSize; // 일반 구간
+    return Math.round(parseFloat(ar)) === Number(effSize); // 단지별 면적(평형)
+  };
 
   // 전광판/요약용: 최신 거래월만
   const filteredTrades = useMemo(
@@ -452,12 +506,9 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
                 </label>
                 <SelectMenu
                   ariaLabel="면적 선택"
-                  value={sizeRange}
+                  value={effSize}
                   onChange={setSizeRange}
-                  options={SIZE_RANGES.map((s) => ({
-                    value: s,
-                    label: SIZE_RANGE_LABEL[s] ?? s,
-                  }))}
+                  options={areaSelectOptions}
                 />
               </div>
             </div>
@@ -498,9 +549,7 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
             <h2 className="text-base font-bold text-navy">
               {complex === "전체" ? "옥정동 전체 단지" : complex}
             </h2>
-            <span className="text-xs px-2 py-0.5 rounded-sm bg-cream border border-border text-text-muted font-medium">
-              {sizeRange === "전체" ? "전체 면적" : sizeRange}
-            </span>
+            <AreaPicker value={effSize} options={areaSelectOptions} onChange={setSizeRange} />
             <span className="text-xs font-bold text-navy">· {tab} 기준</span>
             <YmPicker ym={selectedYm} options={availableYms} onChange={setSelectedYm} />
 
@@ -597,9 +646,7 @@ export default function MarketClient({ trades, rents, currentYmd, accessDate }: 
             <h2 className="text-base font-bold text-navy">
               {complex === "전체" ? "옥정동 전체 단지" : complex}
             </h2>
-            <span className="text-xs px-2 py-0.5 rounded-sm bg-cream border border-border text-text-muted font-medium">
-              {sizeRange === "전체" ? "전체 면적" : sizeRange}
-            </span>
+            <AreaPicker value={effSize} options={areaSelectOptions} onChange={setSizeRange} />
             <span className="text-xs font-bold text-navy">· {mobileKind} 기준</span>
             <YmPicker ym={selectedYm} options={availableYms} onChange={setSelectedYm} />
           </div>
