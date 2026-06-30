@@ -221,6 +221,8 @@ export function formatAmount(amount: string): string {
 
 export function getYearMonth(offsetMonths = 0): string {
   const d = new Date();
+  // 월말(29~31일)에 setMonth가 짧은 달(2월 등)을 건너뛰는 문제 방지: 일자를 1일로 고정
+  d.setDate(1);
   d.setMonth(d.getMonth() - offsetMonths);
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
